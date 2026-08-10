@@ -1,0 +1,95 @@
+TITLE:: PT
+summary:: The Pattern Toolbox registry and evaluation environment
+categories:: Composition>Pattern Toolbox
+related:: Classes/PTObject, Classes/PTStockpile, Classes/PTDataSection
+
+DESCRIPTION::
+Every Pattern Toolbox object has a name and lives in one flat registry held by
+PT. Object specifications are text, and PT compiles that text inside
+link::#*envir::, where every registered object is reachable as code::~name::.
+
+code::
+PTStockpile.specify(\cmajor, "c4 d4 e4 f4 g4 a4 b4");
+
+PTDataSection(\section1, (
+	clock:  "150",
+	number: "50",
+	rhythm: "Prand([1, 2, 3], inf)",
+	pitch:  "Prand(cmajor, inf)"
+)).make.play;
+
+PT.post;
+::
+
+CLASSMETHODS::
+
+METHOD:: new
+Look up a registered object by name. code::PT(\section1):: is the usual form.
+ARGUMENT:: name
+a Symbol.
+
+METHOD:: names
+The names of all registered objects, in creation order.
+ARGUMENT:: type
+optional. A type Symbol such as code::\section:: or code::\stockpile::.
+
+METHOD:: all
+The registered objects themselves.
+
+METHOD:: remove
+METHOD:: removeAll
+Forget one object, or the whole environment.
+
+METHOD:: save
+METHOD:: load
+Write or read a code::.ptx:: archive. An archive is plain sclang source, one
+code::PT.def:: per object, and it carries each object's random seed, so loading
+reproduces the exact realization rather than merely the rules.
+
+METHOD:: eval
+Compile and run a specification string in the toolbox environment, after name
+resolution.
+
+METHOD:: resolve
+The source rewrite applied before compiling. A registered object name becomes
+code::~name::, a pitch name becomes a note number, a dynamic of two characters or
+more becomes a velocity. String literals, symbol literals, method calls and
+keyword arguments are left alone.
+code::
+PT.resolve("Pwhite(c2, c5)");   // -> "Pwhite(36, 72)"
+::
+
+METHOD:: sugar
+Whether link::#*resolve:: rewrites anything. Default code::true::.
+
+METHOD:: middleCOctave
+The octave number of middle C. Default code::4::, as in the AC Toolbox.
+
+METHOD:: note
+METHOD:: midinote
+Convert a pitch name, or an array of them, to midi note numbers. Numbers pass
+through.
+code::
+PT.note(\ef4);      // 63
+PT.note('c#4');     // 61
+::
+
+METHOD:: dyn
+METHOD:: velocity
+Convert a dynamic symbol to a velocity. code::\ppp:: to code::\fff::,
+code::\mf:: is 64.
+
+METHOD:: untilTime
+For the code::number:: slot of a section: keep making notes until this many
+seconds have been filled.
+
+METHOD:: bpm
+METHOD:: mm
+Beats per minute, or a metronome mark, as a clock unit in milliseconds.
+
+METHOD:: clock
+The TempoClock at one beat per second that playback uses. Event durations are in
+seconds.
+
+METHOD:: post
+Post every registered object with its type, length and seed.

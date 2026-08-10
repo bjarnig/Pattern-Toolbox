@@ -1,0 +1,278 @@
+// Pattern Toolbox
+// PT - the object registry, the evaluation environment, and the facade.
+//
+// Every Pattern Toolbox object has a name and lives in one flat registry.
+// Specifications are text; PT.eval compiles that text inside PT.envir, where
+// every registered object is reachable as ~name.
+
+PT {
+	classvar <registry;          // Symbol -> PTObject
+	classvar <order;             // Array of Symbol, creation order (registry has none)
+	classvar <envir;             // Environment that spec text is evaluated in
+	classvar clock;              // TempoClock at 1 bps: event dur is in seconds
+
+	classvar <>sugar = true;     // rewrite bare object names, pitch names, dynamics
+	classvar <>middleCOctave = 4;// c4 == 60, as in the AC Toolbox default
+	classvar <>verbose = true;
+
+	classvar <currentNumber;     // dynamic binding read by PT.fromNumber
+	classvar dynamics, letters;
+
+	*initClass {
+		registry = IdentityDictionary.new;
+		order = Array.new;
+		envir = Environment.new;
+		dynamics = IdentityDictionary[
+			\ppp -> 16, \pp -> 32, \p -> 48, \mp -> 56,
+			\mf -> 64, \f -> 80, \ff -> 96, \fff -> 112
+		];
+		letters = IdentityDictionary[
+			\c -> 0, \d -> 2, \e -> 4, \f -> 5, \g -> 7, \a -> 9, \b -> 11
+		];
+	}
+
+	// ---------------------------------------------------------------- registry
+
+	*clock { ^clock ?? { clock = TempoClock(1) } }
+
+	*new { |name| ^this.at(name) }
+
+	*at { |name| ^registry[name.asSymbol] }
+
+	*includes { |name| ^registry.includesKey(name.asSymbol) }
+
+	*register { |object|
+		var key = object.name;
+		if(registry.includesKey(key).not) { order = order.add(key) };
+		registry[key] = object;
+		this.refresh(object);
+		this.changed(\objects);
+		^object
+	}
+
+	*refresh { |object|
+		// push the object's current binding value into the spec environment
+		envir[object.name] = object.asPTValue;
+	}
+
+	*remove { |name|
+		name = name.asSymbol;
+		registry.removeAt(name);
+		envir.removeAt(name);
+		order = order.reject { |n| n == name };
+		this.changed(\objects);
+	}
+
+	*removeAll {
+		registry.clear; envir.clear; order = Array.new;
+		this.changed(\objects);
+	}
+
+	*names { |type|
+		^order.select { |n|
+			type.isNil or: { registry[n].class.ptType == type.asSymbol }
+		}
+	}
+
+	*all { |type| ^this.names(type).collect { |n| registry[n] } }
+
+	*uniqueName { |base|
+		var candidate, i = 0;
+		base = base.asString;
+		while { candidate = (base ++ ($a.ascii + i).asAscii).asSymbol;
+			registry.includesKey(candidate) and: { i < 25 } } { i = i + 1 };
+		^candidate
+	}
+
+	// ------------------------------------------------------------- evaluation
+
+	*eval { |code|
+		var src = this.resolve(code.asString);
+		if(src.stripWhiteSpace.isEmpty) { ^nil };
+		^envir.use { src.interpret }
+	}
+
+	// Evaluate as a list. A bare token run such as "60 62 64" or "c4 d4 e4" is a
+	// list in the AC Toolbox sense, not an sclang expression, so wrap it first.
+	*evalList { |code|
+		var s = code.asString.stripWhiteSpace;
+		if(s.isEmpty) { ^[] };
+		if(this.prIsBareTokenList(s)) {
+			s = "[" ++ s.split($ ).reject(_.isEmpty).join(", ") ++ "]";
+		};
+		^this.eval(s)
+	}
+
+	*prIsBareTokenList { |s|
+		if(s.includes($[) or: { s.includes($() or: { s.includes($,) } }) { ^false };
+		^s.split($ ).reject(_.isEmpty).size > 1
+	}
+
+	// Rewrite bare identifiers: registered object -> ~name, pitch name -> midi
+	// note number, dynamic name -> velocity. Skips string literals, symbol
+	// literals, method calls and keyword arguments.
+	*resolve { |code|
+		var out, i = 0, n, ch, start, ident, prev, next, sub;
+		if(sugar.not) { ^code };
+		n = code.size;
+		out = String.new(n);
+		while { i < n } {
+			ch = code[i];
+			case
+			{ ch == $" } {
+				out = out.add(ch); i = i + 1;
+				while { (i < n) and: { code[i] != $" } } {
+					if(code[i] == $\\) { out = out.add(code[i]); i = i + 1 };
+					if(i < n) { out = out.add(code[i]); i = i + 1 };
+				};
+				if(i < n) { out = out.add(code[i]); i = i + 1 };
+			}
+			{ ch == $' } {
+				out = out.add(ch); i = i + 1;
+				while { (i < n) and: { code[i] != $' } } { out = out.add(code[i]); i = i + 1 };
+				if(i < n) { out = out.add(code[i]); i = i + 1 };
+			}
+			{ ch == $\\ } {
+				out = out.add(ch); i = i + 1;
+				while { (i < n) and: { code[i].isAlphaNum or: { code[i] == $_ } } } {
+					out = out.add(code[i]); i = i + 1;
+				};
+			}
+			{ ch.isAlpha or: { ch == $_ } } {
+				start = i;
+				while { (i < n) and: { code[i].isAlphaNum or: { code[i] == $_ } } } { i = i + 1 };
+				ident = code.copyRange(start, i - 1);
+				prev = if(start > 0) { code[start - 1] } { $  };
+				next = if(i < n) { code[i] } { $  };
+				sub = ident;
+				if((prev != $~) and: { prev != $. } and: { next != $: }) {
+					sub = this.prSubstitute(ident);
+				};
+				out = out ++ sub;
+			}
+			{ out = out.add(ch); i = i + 1 };
+		};
+		^out
+	}
+
+	*prSubstitute { |ident|
+		var midi;
+		if(registry.includesKey(ident.asSymbol)) { ^"~" ++ ident };
+		midi = this.prParsePitch(ident);
+		if(midi.notNil) { ^midi.asString };
+		// single-character p and f are far too common as variable names
+		if((ident.size > 1) and: { dynamics.includesKey(ident.asSymbol) }) {
+			^dynamics[ident.asSymbol].asString
+		};
+		^ident
+	}
+
+	// ------------------------------------------------------------- conversion
+
+	// c4 cs4 c#4 ef4 bf-1 ... -> midi note number, or nil if not a pitch name
+	*prParsePitch { |str|
+		var s, base, acc = 0, i = 1, sign = 1, oct = 0, digits = 0;
+		s = str.asString.toLower;
+		if(s.size < 2) { ^nil };
+		base = letters[s[0].asString.asSymbol];
+		if(base.isNil) { ^nil };
+		while { (i < s.size) and: { (s[i] == $s) or: { s[i] == $# } } } { acc = acc + 1; i = i + 1 };
+		if(acc == 0) {
+			while { (i < s.size) and: { (s[i] == $f) and: { i + 1 < s.size } } } { acc = acc - 1; i = i + 1 };
+		};
+		if((i < s.size) and: { s[i] == $- }) { sign = -1; i = i + 1 };
+		while { (i < s.size) and: { s[i].isDecDigit } } {
+			oct = (oct * 10) + s[i].digit; i = i + 1; digits = digits + 1;
+		};
+		if((digits == 0) or: { i < s.size }) { ^nil };
+		^((oct * sign) + (5 - middleCOctave)) * 12 + base + acc
+	}
+
+	*midinote { |x|
+		if(x.isNumber) { ^x };
+		if(x.isKindOf(SequenceableCollection)) { ^x.collect { |i| this.midinote(i) } };
+		if(x.isKindOf(Symbol) or: { x.isKindOf(String) }) {
+			^this.prParsePitch(x) ?? { Error("PT: not a pitch name: %".format(x)).throw }
+		};
+		^x
+	}
+
+	*velocity { |x|
+		if(x.isNumber) { ^x };
+		if(x.isKindOf(SequenceableCollection)) { ^x.collect { |i| this.velocity(i) } };
+		^dynamics[x.asSymbol] ?? { Error("PT: not a dynamic: %".format(x)).throw }
+	}
+
+	// Anything that can supply a series of values becomes a Stream.
+	*asStream { |x|
+		if(x.isNil) { ^Pseq([nil], inf).asStream };
+		if(x.isKindOf(PTObject)) { ^x.asStream };
+		if(x.isKindOf(Stream)) { ^x };
+		if(x.isKindOf(Pattern)) { ^x.asStream };
+		if(x.isKindOf(Function)) { ^Pfunc(x).asStream };
+		if(x.isKindOf(SequenceableCollection)) {
+			if(x.isEmpty) { ^Pseq([nil], inf).asStream };
+			^Pseq(x, inf).asStream
+		};
+		^Pseq([x], inf).asStream
+	}
+
+	// Draw values out of anything. n is required for open-ended sources.
+	*collectValues { |source, n|
+		if(source.isKindOf(PTObject)) { source = source.asPTValue };
+		if(source.isKindOf(SequenceableCollection) and: { source.isKindOf(Pattern).not }) {
+			^if(n.isNil) { source } { Pseq(source, inf).asStream.nextN(n) }
+		};
+		if(n.isNil) {
+			Error("PT: a number of values is required for source %".format(source.class)).throw
+		};
+		^this.asStream(source).nextN(n)
+	}
+
+	// ------------------------------------------------------------------ tools
+
+	*untilTime { |seconds| ^PTUntilTime(seconds) }
+	*bpm { |beats| ^60000 / beats }
+	*mm { |beats| ^60000 / beats }
+	*fromNumber { ^currentNumber }
+	*dyn { |name| ^this.velocity(name) }
+	*note { |name| ^this.midinote(name) }
+
+	*prSetCurrentNumber { |n| currentNumber = n }
+
+	*newSeed { ^1000000.rand }
+
+	// --------------------------------------------------------------- lifecycle
+
+	*def { |name, class, slots, seed, comment|
+		var object = class.new(name, slots);
+		object.comment_(comment);
+		if(seed.notNil) { object.make(seed) };
+		^object
+	}
+
+	*make { |name| ^this.at(name).make }
+	*play { |name| ^this.at(name).play }
+	*stop { |name| ^this.at(name).stop }
+	*stopAll { Pdef.all.do(_.stop) }
+
+	*browse { ^PTBrowser.new }
+	*edit { |name| ^this.at(name).edit }
+
+	*save { |path, names| ^PTArchive.save(path, names) }
+	*load { |path| ^PTArchive.load(path) }
+
+	*post {
+		"Pattern Toolbox: % object(s)".format(order.size).postln;
+		order.do { |n| registry[n].postInfo };
+		^this
+	}
+}
+
+// A marker for "keep going until this many seconds have been filled",
+// the AC Toolbox until-time.
+PTUntilTime {
+	var <seconds;
+	*new { |seconds| ^super.newCopyArgs(seconds) }
+	printOn { |stream| stream << "PTUntilTime(" << seconds << ")" }
+}
