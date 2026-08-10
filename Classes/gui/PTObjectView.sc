@@ -36,7 +36,7 @@ PTObjectView {
 
 		window = PTGUI.window(
 			"% : %".format(object.name, object.type),
-			bounds ?? { Rect(470, 260, 560, 60 + (object.spec.keys.size * 28) + 110) }
+			bounds ?? { Rect(470, 260, 560, 44 + (object.spec.keys.size * 30) + 96) }
 		);
 
 		window.layout = VLayout(
@@ -81,7 +81,8 @@ PTObjectView {
 				PTGUI.button("...", { this.prOpenEditor(key) }, 30)
 			]
 		};
-		^GridLayout.rows(rows).hSpacing_(6).vSpacing_(3)
+		// GridLayout.rows is variadic, so the rows must be splatted
+		^GridLayout.rows(*rows).hSpacing_(6).vSpacing_(3)
 	}
 
 	prCommentRow {

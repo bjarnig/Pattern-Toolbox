@@ -12,6 +12,8 @@ the archive format, the browser, the object dialogs, the drawing editor and the
 piano roll all work and are covered by tests. Combinations and transformers are
 next.
 
+![the browser and an object dialog](doc/images/object-dialog.png)
+
 ## Install
 
 Clone into your Extensions folder and recompile:
@@ -123,6 +125,34 @@ parenthesis check.
 
 Playback goes through a `Pdef` named after the object, so you can edit and press
 make while it is sounding and the next cycle picks it up.
+
+## Screenshots
+
+The object list, and the dialog for one section. Every slot is text; the `...`
+button opens a bigger editor with a parenthesis check.
+
+| | |
+| --- | --- |
+| ![browser](doc/images/browser.png) | ![object dialog](doc/images/object-dialog.png) |
+
+Drawing a shape and a mask. A mask is a field: choose top or bottom, then drag.
+The selected line is drawn thicker, as in the original.
+
+| | |
+| --- | --- |
+| ![shape editor](doc/images/shape-editor.png) | ![mask editor](doc/images/mask-editor.png) |
+
+Piano rolls. On the left, notes and rests from a stockpile, brightness following
+velocity. On the right, 220 notes read from the mask above at its boundaries with
+`PTbeta`, so the tendency field is audible and visible as two converging lines.
+
+| | |
+| --- | --- |
+| ![piano roll of notes](doc/images/piano-roll-notes.png) | ![piano roll of a mask](doc/images/piano-roll.png) |
+
+Regenerate them all with `doc/make-screenshots.scd`, which uses
+`Image.fromWindow`, so Qt renders each window itself and the result does not
+depend on what else is on screen.
 
 ## Object lifecycle
 

@@ -65,6 +65,15 @@ PTGUI {
 			.action_(action)
 	}
 
+	*popUp { |items, action|
+		^PopUpMenu()
+			.items_(items)
+			.font_(PTGUI.font)
+			.stringColor_(this.color(\text))
+			.background_(this.color(\panel))
+			.action_(action)
+	}
+
 	*button { |string, action, width|
 		var view = Button()
 			.states_([[string, this.color(\text), this.color(\panel)]])

@@ -81,7 +81,8 @@ PTPianoRoll {
 			.font_(PTGUI.mono(11))
 			.stringColor_(PTGUI.color(\dim));
 
-		window.layout = VLayout(userView, infoView).margins_(6).spacing_(4);
+		// stretch 1 on the drawing area, so the plot grows and the caption does not
+		window.layout = VLayout([userView, stretch: 1], infoView).margins_(6).spacing_(4);
 		window.front;
 		^this
 	}

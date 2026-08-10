@@ -34,10 +34,7 @@ PTBrowser {
 		current = this;
 		window = PTGUI.window("Pattern Toolbox", bounds ?? { Rect(40, 80, 400, 520) });
 
-		typeMenu = PopUpMenu()
-			.items_(types.collect(_.asString))
-			.font_(PTGUI.font)
-			.action_({ this.refresh });
+		typeMenu = PTGUI.popUp(types.collect(_.asString), { this.refresh });
 
 		filterField = PTGUI.field("", { this.refresh });
 

@@ -47,9 +47,7 @@ PTCurveEditor {
 
 		nameField = PTGUI.field(object.name.asString);
 
-		lineMenu = PopUpMenu()
-			.items_(if(curves.size > 1) { ["top", "bottom"] } { ["line"] })
-			.font_(PTGUI.font)
+		lineMenu = PTGUI.popUp(if(curves.size > 1) { ["top", "bottom"] } { ["line"] })
 			.action_({ |menu| lineIndex = menu.value; userView.refresh })
 			.enabled_(curves.size > 1);
 
@@ -60,7 +58,7 @@ PTCurveEditor {
 
 		window.layout = VLayout(
 			HLayout(PTGUI.label("name", 46), nameField, lineMenu),
-			userView,
+			[userView, stretch: 1],
 			statusView,
 			HLayout(
 				PTGUI.button("flat", { this.flatten }),
