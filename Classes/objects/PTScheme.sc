@@ -49,6 +49,8 @@ PTScheme : PTObject {
 
 	size { ^this.names.size }
 
+	canApply { ^true }
+
 	// Run the script: reset the controllers, then remake every member in order.
 	apply {
 		var made;

@@ -179,6 +179,13 @@ for every object type, so the interface stays predictable; `draw` opens the mous
 editor and only shapes and masks answer it. The browser and the dialog show a
 draw button only when the selected object responds to it.
 
+**Capabilities are declared, not probed.** The dialogs and the browser ask
+`canDraw`, `canApply` and `canReset` rather than `respondsTo`. Probing looked
+tidier until a light-theme screenshot showed a reset button on a data section:
+something in the class library defines `Object:reset`, so `respondsTo(\reset)` is
+true for every object in existence. In a language with one flat, widely extended
+class hierarchy, capability probing is not safe.
+
 **One note section, not two dialogs.** The AC Toolbox separates a structured
 section from a note section. The only difference is whether the input is a
 structure or a stream of notes, which the class can see for itself: a structure is
@@ -328,6 +335,14 @@ external dependency.
 
 All of the following exist except `PTIndex`. One class, `PTCurveEditor`, covers
 both shape and mask drawing, because a shape is a mask with one line.
+
+The palette is light: a cool near-white ground, one clean blue accent, grid lines
+as black at low alpha so they sit under content rather than on it. Two things had
+to change from the dark version rather than simply inverting. Velocity in the
+piano roll is shown as colour depth, blending between a pale and a deep blue at
+full opacity, because an alpha-blended bar washes out against white where against
+a dark ground it darkened. And curve lines carry slightly more weight, since a
+thin anti-aliased stroke loses more to a light background than to a dark one.
 
 - **`PTBrowser`**, the persistent window. Type popup, filter field, sortable
   table of name / type / length / made. Buttons: Make, Specify, Play, Stop,

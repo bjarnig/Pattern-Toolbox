@@ -123,6 +123,13 @@ PTObject {
 
 	plot { "PT: % cannot be plotted".format(name).warn; ^nil }
 
+	// What the dialogs and the browser should offer for this object. Declared
+	// rather than probed with respondsTo: Object itself answers to reset, so
+	// probing put a reset button on every object in the toolbox.
+	canDraw { ^false }
+	canApply { ^false }
+	canReset { ^false }
+
 	// --------------------------------------------------------------- reporting
 
 	length { ^if(value.isNil) { 0 } { value.size } }

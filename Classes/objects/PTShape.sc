@@ -69,6 +69,8 @@ PTShape : PTObject {
 	plot { ^this.points.plot(name.asString, minval: this.points.minItem, maxval: this.points.maxItem) }
 
 	// edit gives the text dialog like any other object; draw gives the mouse.
+	canDraw { ^true }
+
 	draw { ^PTCurveEditor(this) }
 
 	length { ^if(value.isNil) { 0 } { value.size } }

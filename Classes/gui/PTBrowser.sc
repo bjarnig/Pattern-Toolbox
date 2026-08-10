@@ -117,15 +117,15 @@ PTBrowser {
 	apply {
 		^this.withSelected { |object|
 			case
-				{ object.respondsTo(\apply) } { object.apply; this.refresh }
-				{ object.respondsTo(\reset) } { object.reset; this.refresh }
+				{ object.canApply } { object.apply; this.refresh }
+				{ object.canReset } { object.reset; this.refresh }
 				{ PTGUI.alert("PT: % has nothing to apply".format(object.name)) }
 		}
 	}
 
 	draw {
 		^this.withSelected { |object|
-			if(object.respondsTo(\draw)) {
+			if(object.canDraw) {
 				object.draw
 			} {
 				PTGUI.alert("PT: % cannot be drawn".format(object.name))

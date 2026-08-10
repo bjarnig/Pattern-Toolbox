@@ -612,15 +612,18 @@ TestPatternToolbox : UnitTest {
 	}
 
 	test_interpolate {
-		var result;
+		var result, early, late;
 		PTNoteStructure.of(\a, "PT.melody(\"1 c4 1 c4 1 c4\")");
 		PTNoteStructure.of(\b, "PT.melody(\"1 c5 1 c5 1 c5\")");
-		result = PT.interpolate(PT(\a), PT(\b), 60);
-		this.assertEquals(result.size, 60, "the requested length");
-		this.assertEquals(result.keep(3).collect(_.pitch), [60, 60, 60],
-			"it starts with the first object");
-		this.assertEquals(result.keep(-3).collect(_.pitch), [72, 72, 72],
-			"and ends with the second");
+		result = PT.interpolate(PT(\a), PT(\b), 200);
+		this.assertEquals(result.size, 200, "the requested length");
+		// the crossover is probabilistic, so this counts rather than checking
+		// individual steps: even step one can already fall to the second object
+		early = result.keep(100).count { |note| note.pitch == 60 };
+		late = result.drop(100).count { |note| note.pitch == 60 };
+		this.assert(early > late, "the first object gives way to the second");
+		this.assert(early > 60, "clearly dominating at the start");
+		this.assert(late < 40, "and clearly given way by the end");
 	}
 
 	test_sectionAsNoteMaterial {
@@ -857,6 +860,20 @@ TestPatternToolbox : UnitTest {
 	}
 
 	// --------------------------------------------------------- gui, pure parts
+
+	test_capabilitiesAreDeclaredNotProbed {
+		// Object itself answers to reset, so respondsTo put a reset button on every
+		// object in the toolbox. These have to be declared.
+		var section = PTDataSection(\s1, (number: "2"));
+		this.assert(Object.new.respondsTo(\reset),
+			"the reason: something in the class library defines Object:reset");
+		this.assertEquals([section.canDraw, section.canApply, section.canReset], [false, false, false],
+			"a data section offers none of the three");
+		this.assertEquals(PTShape.specify(\sh, "0 100").canDraw, true, "a shape can be drawn");
+		this.assertEquals(PTMask.specify(\mk, "100 100", "0 0").canDraw, true, "so can a mask");
+		this.assertEquals(PTController.of(\c1, "1 2").canReset, true, "a controller can be reset");
+		this.assertEquals(PTScheme.of(\sc, \s1).canApply, true, "a scheme can be applied");
+	}
 
 	test_browserFilter {
 		var all = [\section1, \section2, \cmajor, \Noise1];

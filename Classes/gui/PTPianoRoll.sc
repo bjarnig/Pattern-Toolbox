@@ -138,7 +138,12 @@ PTPianoRoll {
 			if(isRest) {
 				Pen.fillColor = PTGUI.color(\rest);
 			} {
-				Pen.fillColor = PTGUI.color(\accent).alpha_((velocity / 127).clip(0.2, 1.0));
+				// velocity as colour depth, not transparency: on a white field an
+				// alpha-blended bar washes out, where a blend between two solid
+				// blues keeps its edges at every dynamic
+				Pen.fillColor = PTGUI.color(\accentPale).blend(
+					PTGUI.color(\accent), (velocity / 127).clip(0, 1)
+				);
 			};
 			Pen.fillRect(Rect(x, y, w, h));
 		};

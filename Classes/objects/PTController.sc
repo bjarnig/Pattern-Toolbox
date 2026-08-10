@@ -111,6 +111,8 @@ PTController : PTObject {
 	// The AC Toolbox take-one: one value, for the whole section.
 	takeOne { ^this.next }
 
+	canReset { ^true }
+
 	reset { ^this.make(seed) }
 
 	history { ^value ? [] }

@@ -11,19 +11,24 @@ PTGUI {
 	classvar palette;
 
 	*initClass {
+		// A light palette. Cool near-white ground, one clean blue accent, and grid
+		// lines as black at low alpha so they sit under content rather than on it.
 		palette = IdentityDictionary[
-			\background   -> Color(0.16, 0.16, 0.17),
-			\panel        -> Color(0.21, 0.21, 0.23),
-			\field        -> Color(0.12, 0.12, 0.13),
-			\text         -> Color(0.88, 0.88, 0.90),
-			\dim          -> Color(0.55, 0.55, 0.58),
-			\accent       -> Color(0.42, 0.68, 0.92),
-			\accentSoft   -> Color(0.42, 0.68, 0.92, 0.25),
-			\made         -> Color(0.52, 0.80, 0.55),
-			\unmade       -> Color(0.85, 0.62, 0.35),
-			\rest         -> Color(0.45, 0.45, 0.48),
-			\grid         -> Color(1, 1, 1, 0.06),
-			\gridStrong   -> Color(1, 1, 1, 0.14)
+			\background   -> Color(0.965, 0.969, 0.976),
+			\panel        -> Color(0.925, 0.933, 0.945),
+			\field        -> Color(1.0, 1.0, 1.0),
+			\text         -> Color(0.11, 0.12, 0.15),
+			\dim          -> Color(0.45, 0.48, 0.53),
+			\accent       -> Color(0.13, 0.42, 0.85),
+			\accentSoft   -> Color(0.13, 0.42, 0.85, 0.16),
+			// the far end of the accent ramp: velocity is shown as colour depth
+			// rather than transparency, which stays crisp against white
+			\accentPale   -> Color(0.74, 0.82, 0.94),
+			\made         -> Color(0.09, 0.53, 0.33),
+			\unmade       -> Color(0.72, 0.45, 0.05),
+			\rest         -> Color(0.62, 0.65, 0.70),
+			\grid         -> Color(0, 0, 0, 0.06),
+			\gridStrong   -> Color(0, 0, 0, 0.17)
 		];
 	}
 

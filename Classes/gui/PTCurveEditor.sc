@@ -209,7 +209,7 @@ PTCurveEditor {
 
 		curves.do { |line, index|
 			Pen.strokeColor = PTGUI.color(if(index == lineIndex) { \accent } { \dim });
-			Pen.width = if(index == lineIndex) { 2 } { 1 };
+			Pen.width = if(index == lineIndex) { 2.5 } { 1.2 };
 			Pen.moveTo(toPoint.value(line, 0));
 			line.size.do { |i| Pen.lineTo(toPoint.value(line, i)) };
 			Pen.stroke;

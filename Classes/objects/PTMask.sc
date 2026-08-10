@@ -94,6 +94,8 @@ PTMask : PTObject {
 	plot { ^this.value.flop.plot(name.asString) }
 
 	// edit gives the text dialog like any other object; draw gives the mouse.
+	canDraw { ^true }
+
 	draw { ^PTCurveEditor(this) }
 
 	length { ^if(value.isNil) { 0 } { value[0].size } }
