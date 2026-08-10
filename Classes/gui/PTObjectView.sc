@@ -90,15 +90,17 @@ PTObjectView {
 	}
 
 	prButtonRow {
-		^HLayout(
+		var buttons = [
 			PTGUI.button("make", { this.make }),
+			if(object.respondsTo(\draw)) { PTGUI.button("draw", { object.draw }) },
 			PTGUI.button("specify", { this.specify }),
 			PTGUI.button("variant", { this.variant }),
 			PTGUI.button("play", { object.play }),
 			PTGUI.button("stop", { object.stop }),
 			PTGUI.button("plot", { this.plot }),
 			PTGUI.button("post", { object.postSpec; object.postInfo })
-		)
+		].reject(_.isNil);
+		^HLayout(*buttons)
 	}
 
 	// A larger editor for one slot, with a parenthesis balance report. The AC

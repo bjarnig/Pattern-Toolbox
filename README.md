@@ -7,9 +7,10 @@ over SuperCollider patterns. You make an object, it gets a name, you can look at
 it, hear it, edit its rules, remake it, make a variant of it, and refer to it
 from any other object. The rules and one specific result are both kept.
 
-Status: **phase 1**. The object model, the stockpile, the data section, the
-archive format, the browser, the object dialogs and the piano roll all work and
-are covered by tests. Shapes and masks are next.
+Status: **phase 2**. The object model, stockpiles, data sections, shapes, masks,
+the archive format, the browser, the object dialogs, the drawing editor and the
+piano roll all work and are covered by tests. Combinations and transformers are
+next.
 
 ## Install
 
@@ -70,6 +71,41 @@ Every slot is text, and every slot accepts the same kinds of thing.
 Bare names are rewritten before compiling: an object name becomes `~name`, a
 pitch name becomes a note number, a dynamic becomes a velocity. Turn it off with
 `PT.sugar = false` and write `~cmajor` and `60` yourself.
+
+## Shapes and masks
+
+A shape is one line, a mask is two. Neither carries a scale of its own: they are
+contours, and they mean nothing until they are converted into a range.
+
+```supercollider
+PTShape.specify(\arch, "0 40 80 100 80 40 0");
+PTMask.specify(\mask1, "100 90 70 100 60", "0 20 40 30 55");
+
+PTShape.draw(\hand);    // drag left to right, then press make
+PTMask.draw(\mask2);    // choose top or bottom, then drag
+
+PT(\arch).convert(20, c3, c5);           // 20 note numbers following the contour
+PT(\mask1).convert(20, 48, 72);          // 20 values inside the field
+PT.readFrom(\cmajor, \arch, 20);         // the contour, limited to a stockpile
+```
+
+In a section, `PT.fromNumber` asks how many notes are being made, so a curve
+stretches to fit instead of repeating:
+
+```supercollider
+PTDataSection(\s1, (
+	number: "200",
+	pitch:  "mask1.convert(PT.fromNumber, 48, 72)"
+)).make.play;
+```
+
+By default the choice inside a mask is uniform. Hand it `PTbeta` with small shape
+parameters and the values hug the two boundaries, so the mask is heard as two
+lines rather than a filled band:
+
+```supercollider
+pitch: "mask1.convert(PT.fromNumber, 48, 72, PTbeta(0.0, 100, 0.1, 0.1))"
+```
 
 ## The browser
 

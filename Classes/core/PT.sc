@@ -238,6 +238,34 @@ PT {
 	*dyn { |name| ^this.velocity(name) }
 	*note { |name| ^this.midinote(name) }
 
+	// Interpret a shape or a mask in a range. The AC Toolbox convert and
+	// convert2, in one place. The method form, shape1.convert(...), is equivalent.
+	*convert { |curve, n, lo = 0, hi = 1, positions, round|
+		if(curve.isKindOf(Symbol)) { curve = this.at(curve) };
+		if(curve.isKindOf(PTMask)) { ^curve.convert(n, lo, hi, positions, round) };
+		if(curve.isKindOf(PTShape)) { ^curve.convert(n, lo, hi, round) };
+		if(curve.isKindOf(SequenceableCollection)) {
+			^PTCurve.convertShape(curve, n ?? { 100 }, lo, hi, round)
+		};
+		Error("PT.convert: not a shape or a mask: %".format(curve.class)).throw
+	}
+
+	// Read from a collection in the order described by a shape or a mask. The
+	// lowest point of the curve reads the first element, the highest the last.
+	*readFrom { |collection, curve, n, positions|
+		var values, indices;
+		if(collection.isKindOf(Symbol)) { collection = this.at(collection) };
+		if(curve.isKindOf(Symbol)) { curve = this.at(curve) };
+		if(collection.isKindOf(PTObject)) { collection = collection.asPTValue };
+		values = collection.asArray;
+		n = n ?? { this.fromNumber ? 100 };
+		indices = case
+			{ curve.isKindOf(PTMask) } { curve.indices(values.size, n, positions) }
+			{ curve.isKindOf(PTShape) } { curve.indices(values.size, n) }
+			{ PTCurve.readIndices(curve, values.size, n, positions) };
+		^indices.collect { |i| values[i] }
+	}
+
 	*prSetCurrentNumber { |n| currentNumber = n }
 
 	*newSeed { ^1000000.rand }

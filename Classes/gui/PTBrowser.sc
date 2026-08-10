@@ -65,7 +65,8 @@ PTBrowser {
 			HLayout(
 				PTGUI.button("edit", { this.edit }),
 				PTGUI.button("make", { this.withSelected(_.make) }),
-				PTGUI.button("variant", { this.withSelected { |o| o.variant; this.refresh } })
+				PTGUI.button("variant", { this.withSelected { |o| o.variant; this.refresh } }),
+				PTGUI.button("draw", { this.draw })
 			),
 			HLayout(
 				PTGUI.button("play", { this.withSelected(_.play) }),
@@ -111,6 +112,16 @@ PTBrowser {
 		^this.withSelected { |object|
 			if(object.isMade.not) { ^PTGUI.alert("PT: % has not been made yet".format(object.name)) };
 			if(object.asEvents.notNil) { PTPianoRoll(object) } { object.plot };
+		}
+	}
+
+	draw {
+		^this.withSelected { |object|
+			if(object.respondsTo(\draw)) {
+				object.draw
+			} {
+				PTGUI.alert("PT: % cannot be drawn".format(object.name))
+			}
 		}
 	}
 

@@ -168,6 +168,17 @@ SuperCollider event type.
 gives three successive notes, `[[c4, e4, g4]]` gives one triad. This matches the
 AC Toolbox convention, where a list of chords is a list of lists.
 
+**A drawn curve is still a text specification.** Accepting a drawing writes the
+point array back into the spec as a literal, exactly as `.acex` stores
+`:input '(draw-mask)` alongside the literal line data. Nothing in the system has
+to know that a curve came from a mouse, and a drawn shape still saves, diffs and
+reloads like everything else.
+
+**`edit` and `draw` are different verbs.** `edit` always opens the text dialog,
+for every object type, so the interface stays predictable; `draw` opens the mouse
+editor and only shapes and masks answer it. The browser and the dialog show a
+draw button only when the selected object responds to it.
+
 **Stockpile has one source slot, not three dialogs.** The original separates
 specify, generate and construct. Here the mode is inferred from what the source
 evaluates to: a bare token run is a list, an expression producing a list is a
@@ -179,8 +190,8 @@ SuperCollider-idiomatic.
 ```
 PTObject                     name, spec, value, seed; make / specify / variant
 ├── PTStockpile              a named collection of values                    [done]
-├── PTShape                  one curve over time; drawn, specified, generated
-├── PTMask                   two curves: a tendency field
+├── PTShape                  one curve over time; drawn, specified, generated [done]
+├── PTMask                   two curves: a tendency field                    [done]
 ├── PTNoteStructure          aNote / aRest / aDelay / inSeq / inPar tree
 ├── PTSection (abstract)     output is an Array of Events                    [done]
 │   ├── PTDataSection        per parameter, calculated independently         [done]
@@ -248,16 +259,16 @@ exact realization rather than merely the rules.
 SuperCollider Qt only, so the whole thing installs as a plain quark with no
 external dependency.
 
-All of the following exist as of phase 1 except `PTShapeEditor`, `PTMaskEditor`
-and `PTIndex`.
+All of the following exist except `PTIndex`. One class, `PTCurveEditor`, covers
+both shape and mask drawing, because a shape is a mask with one line.
 
 - **`PTBrowser`**, the persistent window. Type popup, filter field, sortable
   table of name / type / length / made. Buttons: Make, Specify, Play, Stop,
   Plot, Info, Input, Variant, Remove. Names drag into any spec field.
 - **`PTObjectView`**, a generic form builder. A subclass declares `slotSpecs`
   and the dialog is generated from it. One view class covers most object types.
-- **`PTShapeEditor` / `PTMaskEditor`**, `UserView` mouse drawing, as in the
-  original Draw dialogs.
+- **`PTCurveEditor`**, `UserView` mouse drawing for shapes and masks, as in the
+  original Draw dialogs, with flat, invert, smooth and normalise.
 - **`PTPianoRoll`**, plot for anything with `asEvents`, plus per-parameter plots.
 - **`PTIndex`**, a searchable palette of generators, tools and transformers,
   drag to insert, backed by the schelp documentation so there is one source of
@@ -283,8 +294,8 @@ tutorial asks you to make section2 out of section1.
 | --- | --- | --- | --- |
 | 0 | `PT`, `PTObject`, `PTSpec`, `PTStockpile`, `PTDataSection`, archive | Tutorials 1 and 2 reproducible from the interpreter, under test | **done** |
 | 1 | `PTBrowser`, generic object view, Make / Variant / Play / Plot, piano roll | Tutorials 1 and 2 reproducible by clicking | **done** |
-| 2 | `PTShape`, `PTMask`, drawing editors, `convert` and `readFrom` | Tutorials 3 and 4 | next |
-| 3 | Combinations, transformers, filters, `PTCommunity` | Tutorials 5, 7, 23, 25 | |
+| 2 | `PTShape`, `PTMask`, drawing editors, `convert` and `readFrom` | Tutorials 3 and 4 | **done** |
+| 3 | Combinations, transformers, filters, `PTCommunity` | Tutorials 5, 7, 23, 25 | next |
 | 4 | `PTController`, `PTScheme` | Tutorial 13, the level higher | |
 | 5 | `PTNoteStructure`, note and density sections | Tutorials 8, 9, 10 | |
 | 6 | `PTBind`, MIDI in and out, NRT and MIDI file export, Pbind source export | new ground | |

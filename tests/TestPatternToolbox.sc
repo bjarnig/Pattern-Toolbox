@@ -172,6 +172,123 @@ TestPatternToolbox : UnitTest {
 		this.assert(PT(\a1).isNil, "removal");
 	}
 
+	// ------------------------------------------------------------------ curves
+
+	test_curveSample {
+		this.assertEquals(PTCurve.sample([0, 10], 3), [0, 5, 10], "linear interpolation");
+		this.assertEquals(PTCurve.sample([5], 4), [5, 5, 5, 5], "one point becomes a flat line");
+		this.assertEquals(PTCurve.sample([], 3), [0, 0, 0], "an empty curve does not blow up");
+		this.assertEquals(PTCurve.sample([1, 2, 3], 1), [1], "a single sample");
+	}
+
+	test_curveScale {
+		this.assertEquals(PTCurve.scale([0, 50, 100], 60, 72), [60, 66, 72], "mapped into range");
+		this.assertEquals(PTCurve.scale([7, 7, 7], 0, 100), [50, 50, 50],
+			"a flat curve lands in the middle rather than on an edge");
+	}
+
+	test_shapeConvert {
+		var shape = PTShape.specify(\line, "0 100");
+		this.assertEquals(shape.convert(5, 60, 72), [60, 63, 66, 69, 72],
+			"integer bounds give integer results");
+		this.assertEquals(shape.convert(3, 0.0, 1.0), [0.0, 0.5, 1.0], "float bounds stay float");
+		this.assertEquals(shape.convert(3, 0.0, 10.0, 3), [0.0, 6.0, 9.0],
+			"the rounding unit is honoured");
+	}
+
+	test_shapeContourIsScaleFree {
+		var a = PTShape.specify(\a, "0 5 10");
+		var b = PTShape.specify(\b, "100 150 200");
+		this.assertEquals(a.convert(3, 60, 72), b.convert(3, 60, 72),
+			"only the contour matters, not the absolute values");
+	}
+
+	test_shapeGenerated {
+		var shape = PTShape.generate(\ramp, "Pseries(0, 1)", "10");
+		this.assertEquals(shape.length, 10, "ten points");
+		this.assertEquals(shape.convert(10, 0, 90).last, 90, "the top of the curve reaches hi");
+	}
+
+	test_maskConvert {
+		var mask = PTMask.specify(\m1, "100 100", "0 0");
+		var values = mask.convert(200, 48, 72);
+		this.assertEquals(values.size, 200, "one value per requested point");
+		this.assert(values.every { |v| v.inclusivelyBetween(48, 72) }, "all inside the field");
+		this.assert(values.maxItem > values.minItem, "the field is actually sampled");
+	}
+
+	test_maskNarrowFieldPinsValues {
+		// a mask whose lines meet leaves no freedom at all
+		var mask = PTMask.specify(\m1, "50 50", "50 50");
+		this.assert(mask.convert(20, 60, 72).every { |v| v == 66 },
+			"a closed field yields the middle of the range");
+	}
+
+	test_maskScalesBothLinesTogether {
+		var mask = PTMask.specify(\m1, "100 100", "0 100");
+		var values = mask.convert(2, 0, 100, Pseq([0, 0], inf));   // always the lower line
+		this.assertEquals(values, [0, 100],
+			"the lower line rises to meet the upper one, so the field closes");
+	}
+
+	test_maskSpread {
+		var mask = PTMask.specify(\m1, "100 60", "0 40");
+		var spread = mask.spread(2, 0, 100);
+		this.assert(spread[0] > spread[1], "the field narrows over time");
+	}
+
+	test_readFrom {
+		var stock = PTStockpile.specify(\cmajor, "c4 d4 e4 f4 g4 a4 b4");
+		var shape = PTShape.specify(\rise, "0 100");
+		var read = PT.readFrom(stock, shape, 7);
+		this.assertEquals(read, [60, 62, 64, 65, 67, 69, 71],
+			"a rising line reads the stockpile in order");
+		this.assertEquals(PT.readFrom(stock, PTShape.specify(\fall, "100 0"), 7).reverse,
+			read, "a falling line reads it backwards");
+	}
+
+	test_readFromStaysInsideTheCollection {
+		var stock = PTStockpile.specify(\three, "1 2 3");
+		var mask = PTMask.specify(\m1, "100 100", "0 0");
+		this.assert(PT.readFrom(stock, mask, 50).every { |v| [1, 2, 3].includes(v) },
+			"never reads outside the collection");
+	}
+
+	test_convertFacade {
+		var shape = PTShape.specify(\line, "0 100");
+		this.assertEquals(PT.convert(shape, 3, 60, 72), shape.convert(3, 60, 72),
+			"PT.convert and the method form agree");
+		this.assertEquals(PT.convert([0, 100], 3, 60, 72), [60, 66, 72],
+			"a plain array works as a curve too");
+	}
+
+	test_shapeInASection {
+		PTMask.specify(\mask1, "100 100 100", "0 0 0");
+		PTDataSection(\s1, (number: "100", pitch: "mask1.convert(PT.fromNumber, 48, 72)")).make;
+		this.assertEquals(PT(\s1).length, 100, "a mask fills the whole section");
+		this.assert(PT(\s1).extract(\pitch).every { |p| p.inclusivelyBetween(48, 72) },
+			"pitches stay inside the mask");
+	}
+
+	// -------------------------------------------------------------- generators
+
+	test_beta {
+		var values = 400.collect { PTbeta.value(0.0, 100.0, 0.1, 0.1) };
+		this.assert(values.every { |v| v.inclusivelyBetween(0, 100) }, "inside the bounds");
+		this.assert(values.count { |v| (v < 10) or: { v > 90 } } > 200,
+			"low shape parameters cluster at the edges");
+		values = 400.collect { PTbeta.value(0.0, 100.0, 4, 4) };
+		this.assert(values.count { |v| v.inclusivelyBetween(30, 70) } > 200,
+			"high shape parameters cluster in the middle");
+		this.assert(PTbeta.value(0, 100, 0.5, 0.5).isInteger,
+			"integer bounds give integer results");
+	}
+
+	test_betaAsPattern {
+		this.assertEquals(PTbeta(0.0, 1.0, 0.5, 0.5, 8).asStream.nextN(8).size, 8,
+			"it behaves as an ordinary pattern");
+	}
+
 	// --------------------------------------------------------- gui, pure parts
 
 	test_browserFilter {
