@@ -337,7 +337,14 @@ All of the following exist except `PTIndex`. One class, `PTCurveEditor`, covers
 both shape and mask drawing, because a shape is a mask with one line.
 
 The palette is light: a cool near-white ground, one clean blue accent, grid lines
-as black at low alpha so they sit under content rather than on it. Two things had
+as black at low alpha so they sit under content rather than on it. The type is
+Avenir Next with PT Mono for anything code-shaped, resolved lazily from a
+preference list so the look degrades to the nearest available family rather than
+to whatever Qt happens to pick. A lighter *weight* is not on offer: this Qt build
+resolves `Helvetica Neue Light`, `HelveticaNeue-Light` and `Avenir-Light` all to
+the same fallback, which was established by measuring rendered ink coverage rather
+than by looking. So the lighter reading comes from a lighter family and from ink
+set a shade off black. Two things had
 to change from the dark version rather than simply inverting. Velocity in the
 piano roll is shown as colour depth, blending between a pale and a deep blue at
 full opacity, because an alpha-blended bar washes out against white where against

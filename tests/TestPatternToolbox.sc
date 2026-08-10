@@ -875,6 +875,17 @@ TestPatternToolbox : UnitTest {
 		this.assertEquals(PTScheme.of(\sc, \s1).canApply, true, "a scheme can be applied");
 	}
 
+	test_fontFallback {
+		// includes compares by identity in sclang, so this used to fall through to
+		// the last preference on every platform including the one it was tuned for
+		this.assertEquals(PTGUI.prFirstAvailable(["Menlo", "Avenir Next"], ["Avenir Next", "Menlo"]),
+			"Avenir Next", "the first available preference wins");
+		this.assertEquals(PTGUI.prFirstAvailable(["Menlo"], ["Avenir Next", "Menlo"]),
+			"Menlo", "falling through to one that exists");
+		this.assertEquals(PTGUI.prFirstAvailable([], ["Avenir Next", "Menlo"]),
+			"Menlo", "and to the last preference when nothing is known");
+	}
+
 	test_browserFilter {
 		var all = [\section1, \section2, \cmajor, \Noise1];
 		this.assertEquals(PTBrowser.filterNames(all, ""), all, "an empty filter shows everything");

@@ -4,21 +4,33 @@
 // the object dialogs and the plots read as one piece of software.
 
 PTGUI {
-	classvar <>fontName = "Helvetica";
-	classvar <>monoName = "Menlo";
+	// Qt here will not resolve a named Light face: "Helvetica Neue Light",
+	// "HelveticaNeue-Light" and "Avenir-Light" all render identically to the
+	// fallback, measured by ink coverage. So the lighter look comes from a
+	// genuinely lighter family rather than from a weight that is not available.
+	// Avenir Next lays down about a fifth less ink than Helvetica Neue at the
+	// same size, and PT Mono is appreciably lighter than Menlo.
+	// Resolved on first use from these preferences, so the look degrades to the
+	// nearest available family instead of to whatever Qt picks. Set either name
+	// before opening a window to override.
+	classvar <>fontName, <>monoName;
 	classvar <>fontSize = 12;
 
+	classvar sansPreference, monoPreference, namesResolved = false;
 	classvar palette;
 
 	*initClass {
+		sansPreference = ["Avenir Next", "Avenir", "Helvetica Neue", "Inter", "Helvetica"];
+		monoPreference = ["PT Mono", "Menlo", "DejaVu Sans Mono", "Consolas", "Monaco"];
 		// A light palette. Cool near-white ground, one clean blue accent, and grid
 		// lines as black at low alpha so they sit under content rather than on it.
 		palette = IdentityDictionary[
 			\background   -> Color(0.965, 0.969, 0.976),
 			\panel        -> Color(0.925, 0.933, 0.945),
 			\field        -> Color(1.0, 1.0, 1.0),
-			\text         -> Color(0.11, 0.12, 0.15),
-			\dim          -> Color(0.45, 0.48, 0.53),
+			// ink a shade off black, which reads lighter without losing contrast
+			\text         -> Color(0.18, 0.20, 0.24),
+			\dim          -> Color(0.49, 0.52, 0.57),
 			\accent       -> Color(0.13, 0.42, 0.85),
 			\accentSoft   -> Color(0.13, 0.42, 0.85, 0.16),
 			// the far end of the accent ramp: velocity is shown as colour depth
@@ -34,11 +46,30 @@ PTGUI {
 
 	*color { |key| ^palette[key] ?? { Color.gray } }
 
+	// Qt is only asked for the font list once, and lazily: calling it during
+	// initClass would run before the GUI is ready.
+	*prResolveNames {
+		var available;
+		if(namesResolved) { ^this };
+		namesResolved = true;
+		available = try { Font.availableFonts.collect(_.asString) } { [] };
+		fontName = fontName ?? { this.prFirstAvailable(available, sansPreference) };
+		monoName = monoName ?? { this.prFirstAvailable(available, monoPreference) };
+	}
+
+	*prFirstAvailable { |available, wanted|
+		// includesEqual, not includes: the latter compares by identity, so two
+		// equal Strings never match and every preference silently falls through
+		^wanted.detect { |name| available.includesEqual(name) } ?? { wanted.last }
+	}
+
 	*font { |size, bold = false|
+		this.prResolveNames;
 		^Font(fontName, size ? fontSize, bold)
 	}
 
 	*mono { |size|
+		this.prResolveNames;
 		^Font(monoName, size ? fontSize)
 	}
 
