@@ -61,6 +61,21 @@ PTSection : PTObject {
 		^this.asEvents.collect { |event| event[key] }
 	}
 
+	// The events read back as notes, so a section can serve as note material.
+	// Rhythms come out in seconds, so a note section with a clock of 1000
+	// reproduces the original timing.
+	asNotes {
+		^this.asEvents.collect { |event|
+			PTNote(
+				event[\sustain] ? event[\dur] ? 1,
+				event[\midinote] ? 60,
+				event[\velocity] ? 64,
+				event[\chan] ? 1,
+				if(event[\type] == \rest) { \rest } { \note }
+			)
+		}
+	}
+
 	// ------------------------------------------------------------------ plots
 
 	// No argument opens the piano roll, as the AC Toolbox Plot button does.

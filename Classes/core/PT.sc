@@ -188,17 +188,22 @@ PT {
 		^((oct * sign) + (5 - middleCOctave)) * 12 + base + acc
 	}
 
+	// A String is a SequenceableCollection, so names must be tested before lists
+	// or "c4" gets collected over its characters and quietly comes back unchanged.
 	*midinote { |x|
 		if(x.isNumber) { ^x };
-		if(x.isKindOf(SequenceableCollection)) { ^x.collect { |i| this.midinote(i) } };
 		if(x.isKindOf(Symbol) or: { x.isKindOf(String) }) {
 			^this.prParsePitch(x) ?? { Error("PT: not a pitch name: %".format(x)).throw }
 		};
+		if(x.isKindOf(SequenceableCollection)) { ^x.collect { |i| this.midinote(i) } };
 		^x
 	}
 
 	*velocity { |x|
 		if(x.isNumber) { ^x };
+		if(x.isKindOf(Symbol) or: { x.isKindOf(String) }) {
+			^dynamics[x.asSymbol] ?? { Error("PT: not a dynamic: %".format(x)).throw }
+		};
 		if(x.isKindOf(SequenceableCollection)) { ^x.collect { |i| this.velocity(i) } };
 		^dynamics[x.asSymbol] ?? { Error("PT: not a dynamic: %".format(x)).throw }
 	}
@@ -236,7 +241,6 @@ PT {
 	*mm { |beats| ^60000 / beats }
 	*fromNumber { ^currentNumber }
 	*dyn { |name| ^this.velocity(name) }
-	*note { |name| ^this.midinote(name) }
 
 	// Interpret a shape or a mask in a range. The AC Toolbox convert and
 	// convert2, in one place. The method form, shape1.convert(...), is equivalent.
@@ -281,6 +285,123 @@ PT {
 		if(x.isKindOf(Symbol)) { x = this.at(x) };
 		if(x.isKindOf(PTController)) { ^x.takeOne };
 		^this.scalar(x)
+	}
+
+	// ------------------------------------------------------------------- notes
+
+	*note { |rhythm = 1, pitch = 60, velocity = 64, channel = 1|
+		^PTNote(rhythm, pitch, velocity, channel, \note)
+	}
+
+	*rest { |rhythm = 1| ^PTNote(rhythm, 60, 0, 1, \rest) }
+
+	// Time with nothing in it at all, not even a rest event.
+	*delay { |rhythm = 1| ^PTNote(rhythm, 60, 0, 1, \delay) }
+
+	*seq { |... items| ^PTNoteSeq(items) }
+
+	*par { |... items| ^PTNotePar(items) }
+
+	// the AC Toolbox spellings, for people arriving from it
+	*aNote { |rhythm = 1, pitch = 60, velocity = 64, channel = 1|
+		^this.note(rhythm, pitch, velocity, channel)
+	}
+	*aRest { |rhythm = 1| ^this.rest(rhythm) }
+	*aDelay { |rhythm = 1| ^this.delay(rhythm) }
+	*inSequence { |... items| ^PTNoteSeq(items) }
+	*inParallel { |... items| ^PTNotePar(items) }
+
+	// A melody as alternating rhythm and pitch: "1 c4 1 d4 2 e4 1 r".
+	// r or rest is a rest, . is a delay, and c4+e4+g4 is a chord.
+	*melody { |string, velocity = 64, channel = 1|
+		var tokens = string.asString.split($ ).reject { |t| t.stripWhiteSpace.isEmpty };
+		var items = Array.new(tokens.size div: 2);
+		var i = 0;
+		while { i + 1 < tokens.size } {
+			var rhythm = tokens[i].asFloat;
+			var token = tokens[i + 1].toLower;
+			items = items.add(
+				case
+					{ (token == "r") or: { token == "rest" } } { this.rest(rhythm) }
+					{ token == "." } { this.delay(rhythm) }
+					{ token.includes($+) } {
+						this.note(rhythm,
+							token.split($+).collect { |p| this.midinote(p) },
+							velocity, channel)
+					}
+					{ this.note(rhythm, this.midinote(token), velocity, channel) }
+			);
+			i = i + 2;
+		};
+		^PTNoteSeq(items)
+	}
+
+	// Anything at all, read as a note tree.
+	*asNoteTree { |x|
+		if(x.isKindOf(Symbol)) { x = this.at(x) ?? { x } };
+		if(x.isKindOf(PTNoteStructure)) { ^x.tree };
+		if(x.isKindOf(PTNoteTree)) { ^x };
+		if(x.isKindOf(PTSection)) { ^PTNoteSeq(x.asNotes) };
+		if(x.isKindOf(String)) { ^this.melody(x) };
+		if(x.isKindOf(SequenceableCollection)) { ^PTNoteSeq(x) };
+		^PTNoteSeq([this.asNote(x)])
+	}
+
+	*asNote { |x|
+		if(x.isKindOf(PTNote)) { ^x };
+		if(x.isKindOf(Event)) {
+			^PTNote(x[\rhythm] ? 1, x[\midinote] ? 60, x[\velocity] ? 64, x[\chan] ? 1,
+				if(x[\type] == \rest) { \rest } { \note })
+		};
+		if(x.isNumber or: { x.isKindOf(Symbol) }) { ^this.note(1, x) };
+		if(x.isKindOf(SequenceableCollection)) { ^this.note(1, x) };
+		Error("PT: cannot read % as a note".format(x.class)).throw
+	}
+
+	// A supply of notes out of whatever was given: a structure, a section, a list.
+	*asList { |x|
+		if(x.isKindOf(Symbol)) { x = this.at(x) ?? { x } };
+		if(x.isKindOf(PTNoteStructure)) { ^x.notes };
+		if(x.isKindOf(PTNoteTree)) { ^x.notes };
+		if(x.isKindOf(PTSection)) { ^x.asNotes };
+		if(x.isKindOf(PTObject)) { x = x.asPTValue };
+		if(x.isKindOf(PTNoteStructure)) { ^x.notes };
+		^x.asArray
+	}
+
+	// ------------------------------------------------------------------- density
+
+	// A list of attack points made by adding one interval after another, then
+	// mapped into low..high. The Xenakis approach: the function decides the
+	// distance to the next attack rather than the absolute position.
+	*attacks { |interval = 1, low = 0.0, high = 100, number|
+		var stream = this.asStream(interval);
+		var count = (number ?? { this.fromNumber ? 20 }).asInteger;
+		var running = 0;
+		var raw = Array.new(count);
+		count.do {
+			raw = raw.add(running);
+			running = running + (stream.next ? 1);
+		};
+		if(count < 2) { ^raw };
+		^PTCurve.scale(raw, low, high)
+	}
+
+	// Rainer Boesch's interpolation: step by step, take an element either from the
+	// first object or from the second, with the second becoming steadily more
+	// likely. A shape can replace the straight line.
+	*interpolate { |object1, object2, number = 40, shape|
+		var one = this.asList(object1), two = this.asList(object2);
+		var probabilities = if(shape.notNil) {
+			this.convert(shape, number, 0.0, 1.0)
+		} {
+			number.collect { |i| i / max(number - 1, 1) }
+		};
+		if(one.isEmpty) { ^two.keep(number) };
+		if(two.isEmpty) { ^one.keep(number) };
+		^number.collect { |i|
+			if(1.0.rand < (probabilities[i] ? 0)) { two.wrapAt(i) } { one.wrapAt(i) }
+		}
 	}
 
 	// Map values through a lookup table given as pairs: key, value, key, value.

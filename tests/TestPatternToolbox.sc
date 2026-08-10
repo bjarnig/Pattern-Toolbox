@@ -3,21 +3,38 @@
 TestPatternToolbox : UnitTest {
 
 	setUp { PT.removeAll }
+
+	prAscends { |array|
+		^array.every { |value, i| (i == 0) or: { value >= array[i - 1] } }
+	}
+
+	// When each note begins, in seconds from the start of the section.
+	prAttackTimes { |section|
+		var time = 0, out = [];
+		section.asEvents.do { |event|
+			if(event[\type] != \rest) { out = out.add(time) };
+			time = time + (event[\dur] ? 0);
+		};
+		^out
+	}
 	tearDown { PT.removeAll }
 
 	// ------------------------------------------------------------ conversions
 
 	test_pitchNames {
-		this.assertEquals(PT.note(\c4), 60, "c4 is middle C");
-		this.assertEquals(PT.note(\c5), 72, "c5");
-		this.assertEquals(PT.note(\cs4), 61, "cs4 is a semitone above c4");
-		this.assertEquals(PT.note('c#4'), 61, "c#4 uses the AC Toolbox spelling");
-		this.assertEquals(PT.note(\ef4), 63, "ef4 is e flat");
-		this.assertEquals(PT.note(\f4), 65, "f4 is a note name, not a flat");
-		this.assertEquals(PT.note('c-1'), 0, "c-1 is the lowest pitch");
-		this.assertEquals(PT.note(\g9), 127, "g9 is the highest pitch");
-		this.assertEquals(PT.note(60), 60, "numbers pass through");
-		this.assertEquals(PT.note([\c4, \e4, \g4]), [60, 64, 67], "chords convert elementwise");
+		this.assertEquals(PT.midinote(\c4), 60, "c4 is middle C");
+		this.assertEquals(PT.midinote(\c5), 72, "c5");
+		this.assertEquals(PT.midinote(\cs4), 61, "cs4 is a semitone above c4");
+		this.assertEquals(PT.midinote('c#4'), 61, "c#4 uses the AC Toolbox spelling");
+		this.assertEquals(PT.midinote(\ef4), 63, "ef4 is e flat");
+		this.assertEquals(PT.midinote(\f4), 65, "f4 is a note name, not a flat");
+		this.assertEquals(PT.midinote('c-1'), 0, "c-1 is the lowest pitch");
+		this.assertEquals(PT.midinote(\g9), 127, "g9 is the highest pitch");
+		this.assertEquals(PT.midinote(60), 60, "numbers pass through");
+		this.assertEquals(PT.midinote([\c4, \e4, \g4]), [60, 64, 67], "chords convert elementwise");
+		this.assertEquals(PT.midinote("c4"), 60,
+			"a String is a name, not a list of characters");
+		this.assertEquals(PT.velocity("mf"), 64, "and the same for dynamics");
 	}
 
 	test_dynamics {
@@ -507,6 +524,196 @@ TestPatternToolbox : UnitTest {
 		this.assertFloatEquals(parallel.duration, 1.0, "or into a parallel section");
 		this.assertFloatEquals(community.asSequence(\spaced, 1).duration, 3.0,
 			"with a delay between members");
+	}
+
+	// ---------------------------------------------------------- note structures
+
+	test_melodyParsing {
+		var theme = PT.melody("1 c4 1 d4 2 e4 1 r 1 f4");
+		this.assertEquals(theme.length, 5, "five events");
+		this.assertEquals(theme.notes.collect(_.pitch), [60, 62, 64, 60, 65], "pitches");
+		this.assertEquals(theme.notes.collect(_.rhythm), [1, 1, 2, 1, 1], "rhythms");
+		this.assertEquals(theme.notes[3].isRest, true, "r is a rest");
+		this.assertEquals(theme.soundingNotes.size, 4, "four of them sound");
+		this.assertEquals(theme.duration, 6, "six clock units in total");
+	}
+
+	test_melodyChordsAndDelays {
+		var theme = PT.melody("2 c4+e4+g4 1 . 1 d4");
+		this.assertEquals(theme.notes[0].pitch, [60, 64, 67], "a plus sign makes a chord");
+		this.assertEquals(theme.length, 2, "a delay is not a note");
+		this.assertEquals(theme.duration, 4, "but it does take time");
+	}
+
+	test_noteTreeSequenceAndParallel {
+		var chord = PT.par(PT.note(2, \c4), PT.note(2, \e4), PT.note(2, \g4));
+		var tree = PT.seq(chord, PT.note(1, \b4));
+		this.assertEquals(chord.duration, 2, "a parallel group lasts as long as its longest item");
+		this.assertEquals(tree.duration, 3, "a sequence adds them up");
+		this.assertEquals(tree.asTimed(0).collect { |p| p[0] }, [0, 0, 0, 2],
+			"three notes at the start, then one after them");
+	}
+
+	test_noteStructureObject {
+		var theme = PTNoteStructure.of(\theme, "PT.melody(\"1 c4 1 d4 2 e4\")");
+		this.assertEquals(theme.size, 3, "the collection protocol works");
+		this.assertEquals(theme.at(1).pitch, 62, "indexing");
+		this.assertEquals(theme.beats, 4, "length in clock units");
+		this.assertEquals(theme.notes.collect(_.pitch), [60, 62, 64], "the notes");
+	}
+
+	// ------------------------------------------------------------ note sections
+
+	test_noteSectionPlaysAStructureAsWritten {
+		var section;
+		PTNoteStructure.of(\theme, "PT.melody(\"1 c4 1 d4 2 e4 1 r\")");
+		section = PTNoteSection(\played, (clock: "250", notes: "theme")).make;
+		this.assertEquals(section.length, 4, "an empty number means all of them");
+		this.assertEquals(section.numNotes, 3, "the rest is kept but does not sound");
+		this.assertFloatEquals(section.duration, 1.25, "five units at 250 ms");
+		this.assertEquals(section.extract(\pitch), [60, 62, 64, 60], "in order");
+	}
+
+	test_noteSectionKeepsParallelism {
+		var section;
+		PTNoteStructure.of(\chord,
+			"PT.seq(PT.par(PT.note(2, c4), PT.note(2, e4)), PT.note(1, b4))");
+		section = PTNoteSection(\played, (clock: "500", notes: "chord")).make;
+		this.assertArrayFloatEquals(section.extract(\rhythm), [0.0, 1.0, 0.5],
+			"the two notes of the chord are coincident, so the first has no delta");
+		this.assertArrayFloatEquals(section.asEvents.collect { |e| e[\sustain] }, [1.0, 1.0, 0.5],
+			"but both sound for their full length");
+	}
+
+	test_noteSectionFlattensThroughAGenerator {
+		PTNoteStructure.of(\theme, "PT.melody(\"1 c4 1 d4 1 e4\")");
+		PTNoteSection(\chosen, (clock: "200", number: "12", notes: "Prand(theme, inf)")).make;
+		this.assertEquals(PT(\chosen).length, 12, "as many notes as asked for");
+		this.assert(PT(\chosen).extract(\pitch).every { |p| [60, 62, 64].includes(p) },
+			"all drawn from the structure");
+	}
+
+	test_noteSectionNeedsANumberForAGenerator {
+		PTNoteStructure.of(\theme, "PT.melody(\"1 c4\")");
+		this.assertException(
+			{ PTNoteSection(\bad, (notes: "Prand(theme, inf)")).make },
+			Error,
+			"an endless supply of notes with no number is an error, not a hang"
+		);
+	}
+
+	test_noteSectionReadsWithAShape {
+		PTNoteStructure.of(\theme, "PT.melody(\"1 c4 1 d4 1 e4 1 f4\")");
+		PTShape.specify(\rise, "0 100");
+		PTNoteSection(\read, (clock: "200", number: "4",
+			notes: "PT.readFrom(theme, rise, PT.fromNumber)")).make;
+		this.assertEquals(PT(\read).extract(\pitch), [60, 62, 64, 65],
+			"a rising line reads the structure in order");
+	}
+
+	test_interpolate {
+		var result;
+		PTNoteStructure.of(\a, "PT.melody(\"1 c4 1 c4 1 c4\")");
+		PTNoteStructure.of(\b, "PT.melody(\"1 c5 1 c5 1 c5\")");
+		result = PT.interpolate(PT(\a), PT(\b), 60);
+		this.assertEquals(result.size, 60, "the requested length");
+		this.assertEquals(result.keep(3).collect(_.pitch), [60, 60, 60],
+			"it starts with the first object");
+		this.assertEquals(result.keep(-3).collect(_.pitch), [72, 72, 72],
+			"and ends with the second");
+	}
+
+	test_sectionAsNoteMaterial {
+		var notes;
+		PTDataSection(\s1, (clock: "1000", number: "4", rhythm: "1", pitch: "c4 d4 e4 f4")).make;
+		notes = PT.asList(PT(\s1));
+		this.assertEquals(notes.collect(_.pitch), [60, 62, 64, 65], "a section supplies notes too");
+		PTNoteSection(\again, (clock: "1000", notes: "PT.asList(s1)")).make;
+		this.assertFloatEquals(PT(\again).duration, PT(\s1).duration,
+			"and a clock of 1000 reproduces the original timing");
+	}
+
+	// --------------------------------------------------------- density sections
+
+	test_attacksTool {
+		this.assertArrayFloatEquals(PT.attacks(1, number: 5), [0, 25, 50, 75, 100],
+			"equal intervals spread evenly from 0 to 100");
+		this.assert(this.prAscends(PT.attacks(Pwhite(1, 10), number: 20)),
+			"attack points always ascend, whatever the intervals");
+	}
+
+	test_densityFromAList {
+		var section = PTDensity(\time1, (time: "10", number: "3",
+			attacks: "0 10 20 30 40 50 60 70 80 90", duration: "200", pitch: "60")).make;
+		this.assertEquals(section.length, 10,
+			"a list of attacks sets the number itself, whatever the number slot says");
+		this.assertArrayFloatEquals(
+			section.asEvents.collect { |e| e[\dur] }.drop(-1), 9.collect { 1.0 },
+			"ten points across ten seconds land one second apart");
+		this.assertFloatEquals(section.asEvents[0][\sustain], 0.2,
+			"duration is in milliseconds, independent of any clock");
+	}
+
+	test_densityFromAGenerator {
+		var section = PTDensity(\t, (time: "10", number: "40",
+			attacks: "Pwhite(0.0, 100)", pitch: "60")).make;
+		var times = this.prAttackTimes(section);
+		this.assertEquals(section.numNotes, 40, "the number slot decides");
+		this.assertEquals(section.asEvents[0][\type], \rest,
+			"a generator rarely lands its first attack on zero, so the section opens with silence");
+		this.assert(this.prAscends(times), "attack points are sorted into ascending order");
+		this.assert(times.last < 10.0, "and all of them fall inside the allotted time");
+	}
+
+	test_densityAttacksFollowTheDistribution {
+		var times, middle, edges;
+		PTDensity(\t, (time: "10", number: "300",
+			attacks: "PTbeta(0.0, 100, 0.2, 0.2)", pitch: "60")).make;
+		times = this.prAttackTimes(PT(\t));
+		middle = times.count { |t| t.inclusivelyBetween(4, 6) };
+		edges = times.count { |t| (t < 1) or: { t > 9 } };
+		// beta with small parameters is symmetric but crowds both ends, so the
+		// middle fifth of the time is thin and the outer fifth is thick
+		this.assert(middle < 60, "the middle of the section is sparser than uniform would be");
+		this.assert(edges > (middle * 2), "and the two ends are much thicker than the middle");
+	}
+
+	test_densityCurve {
+		var section, expected = (1 + 20) / 2 * 6;
+		PTShape.specify(\rise, "0 100");
+		section = PTDensityCurve(\c1, (time: "6", curve: "rise",
+			min: "1", max: "20", unit: "1", duration: "100", pitch: "60")).make;
+		this.assert((section.length - expected).abs < 12,
+			"the note count follows the area under the density curve");
+		this.assert(section.length > 20, "and there are a good many of them");
+	}
+
+	test_densityCurveGrowsOverTime {
+		var first, second;
+		PTShape.specify(\rise, "0 100");
+		PTDensityCurve(\c1, (time: "10", curve: "rise", min: "1", max: "30",
+			unit: "1", duration: "50", pitch: "60")).make;
+		first = PT(\c1).asEvents.keep(PT(\c1).length div: 2).sum { |e| e[\dur] };
+		second = PT(\c1).duration - first;
+		this.assert(first > second,
+			"a rising density means the first half of the notes takes longer than the second");
+	}
+
+	test_densityCurveSpreadsWithinEachStep {
+		var times;
+		PTShape.specify(\flat, "50 50");
+		PTDensityCurve(\c1, (time: "4", curve: "flat", min: "10", max: "10",
+			unit: "1", duration: "50", pitch: "60")).make;
+		times = this.prAttackTimes(PT(\c1));
+		this.assertEquals(times.size, 40, "ten notes in each of four seconds");
+		this.assert(times.asSet.size > 30,
+			"the notes are spread inside each step, not stacked on its boundary");
+	}
+
+	test_densityCurveWithAMask {
+		PTMask.specify(\band, "60 100", "10 40");
+		PTDensityCurve(\c1, (time: "5", curve: "band", min: "1", max: "20", pitch: "60")).make;
+		this.assert(PT(\c1).length > 5, "a mask gives a random density inside its field");
 	}
 
 	// ------------------------------------------------------------- controllers

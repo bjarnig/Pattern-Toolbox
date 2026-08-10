@@ -75,6 +75,14 @@ PT(\howMany).comment_("more notes with every make");
 PTScheme(\round, (members: "funnel tendency", reset: "howMany")).make;
 PT(\round).comment_("remake the mask, then what reads it");
 
+// a density section: time first, filled as thickly as a shape says
+PTShape(\swell, (source: "1 4 20 8 2 14 30 6 1")).make;
+PTDensityCurve(\swelling, (
+	time: "14", curve: "swell", min: "1", max: "24", unit: "1",
+	duration: "120", pitch: "Pwhite(c2, c6)"
+)).make;
+PT(\swelling).comment_("density read from a shape, notes per second");
+
 // -------------------------------------------------------------- the captures
 
 step.(0.4, { var w = PTBrowser.new.window;      step.(0.6, { shoot.("browser", w); w.close }) });
@@ -86,5 +94,7 @@ step.(7.0, { var w = PT(\arch).draw.window;     step.(0.8, { shoot.("shape-edito
 
 step.(8.4, { var w = PTPianoRoll(PT(\duo)).window; step.(0.8, { shoot.("piano-roll-parallel", w); w.close }) });
 
-step.(9.8, { "\n% screenshot(s) in %".format(shots.size, dir).postln });
+step.(9.8, { var w = PTPianoRoll(PT(\swelling)).window; step.(0.8, { shoot.("piano-roll-density", w); w.close }) });
+
+step.(11.2, { "\n% screenshot(s) in %".format(shots.size, dir).postln });
 )

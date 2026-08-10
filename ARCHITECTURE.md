@@ -179,6 +179,27 @@ for every object type, so the interface stays predictable; `draw` opens the mous
 editor and only shapes and masks answer it. The browser and the dialog show a
 draw button only when the selected object responds to it.
 
+**One note section, not two dialogs.** The AC Toolbox separates a structured
+section from a note section. The only difference is whether the input is a
+structure or a stream of notes, which the class can see for itself: a structure is
+played as written with its parallelism intact, anything else is laid out in
+sequence. Same reasoning as collapsing the three stockpile dialogs into one
+source slot.
+
+**A note tree is a Composite, and rhythm in it is in clock units.** `PTNote` is
+both a leaf and a `PTNoteTree`, so `notes`, `duration` and `asTimed` work
+uniformly on a single note and on a nested structure. Rhythms stay in clock units
+until a section supplies the clock, which is what lets one structure be played at
+several tempi.
+
+**A rest is an event, a delay is not.** Both take time. A rest survives into the
+realized section as an event of type `\rest` so it can be seen and counted; a
+delay leaves nothing behind at all.
+
+**An unbounded note supply with no number is an error, not a hang.** `notes:
+"Prand(theme, inf)"` with an empty number slot used to loop forever. A structure
+can answer "all of them"; a generator cannot, and now says so.
+
 **\dur is a delta, \sustain is a length.** A single section has them equal. A
 combination does not: two voices sounding at the same instant produce one event
 with `\dur: 0` and a full `\sustain`. Separating the two is what lets voices
@@ -236,11 +257,12 @@ PTObject                     name, spec, value, seed; make / specify / variant
 ├── PTStockpile              a named collection of values                    [done]
 ├── PTShape                  one curve over time; drawn, specified, generated [done]
 ├── PTMask                   two curves: a tendency field                    [done]
-├── PTNoteStructure          aNote / aRest / aDelay / inSeq / inPar tree
+├── PTNoteStructure          a note tree: notes, rests, delays, seq, par     [done]
 ├── PTSection (abstract)     output is an Array of Events                    [done]
 │   ├── PTDataSection        per parameter, calculated independently         [done]
-│   ├── PTNoteSection        driven by note structures
-│   ├── PTDensitySection     driven by time, filled by a function or a shape
+│   ├── PTNoteSection        driven by note structures                      [done]
+│   ├── PTDensity            time first, attacks given as percentages        [done]
+│   ├── PTDensityCurve       time first, density read from a curve            [done]
 │   ├── PTDerived            another section, transformed                    [done]
 │   └── PTCombination        PTSequence | PTParallel | PTTimed              [done]
 ├── PTController             a stream with state, history and reset       [done]
@@ -342,8 +364,8 @@ tutorial asks you to make section2 out of section1.
 | 2 | `PTShape`, `PTMask`, drawing editors, `convert` and `readFrom` | Tutorials 3 and 4 | **done** |
 | 3 | Combinations, transformers, filters, `PTCommunity` | Tutorials 5, 7, 23, 25 | **done** |
 | 4 | `PTController`, `PTScheme` | Tutorial 13, the level higher | **done** |
-| 5 | `PTNoteStructure`, note and density sections | Tutorials 8, 9, 10 | next |
-| 6 | `PTBind`, MIDI in and out, NRT and MIDI file export, Pbind source export | new ground | |
+| 5 | `PTNoteStructure`, note and density sections | Tutorials 8, 9, 10 | **done** |
+| 6 | `PTBind`, MIDI in and out, NRT and MIDI file export, Pbind source export | new ground | next |
 | 7 | Generator library: Koenig selection principles, chaos, 1/f, transition tables, mutations | Tutorial 24 and the Annotated Index | |
 
 ## 12. Open questions
