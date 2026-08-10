@@ -11,7 +11,7 @@ PTBrowser {
 	classvar <>types;
 
 	*initClass {
-		types = [\all, \section, \stockpile, \shape, \mask, \controller, \scheme];
+		types = [\all, \section, \stockpile, \shape, \mask, \community, \controller, \scheme];
 	}
 
 	*new { |bounds|

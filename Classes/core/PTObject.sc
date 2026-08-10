@@ -121,6 +121,8 @@ PTObject {
 
 	edit { ^PTObjectView(this) }
 
+	plot { "PT: % cannot be plotted".format(name).warn; ^nil }
+
 	// --------------------------------------------------------------- reporting
 
 	length { ^if(value.isNil) { 0 } { value.size } }

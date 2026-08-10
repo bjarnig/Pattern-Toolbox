@@ -61,6 +61,14 @@ PT(\tendency).comment_("mask read at its boundaries");
 
 PT(\opening).variant(\openingA);
 
+// two voices at once, to show how a combination overlaps them
+PTDataSection(\pulse, (
+	clock: "150", number: "24", rhythm: "2",
+	pitch: "Prand(cmajor, inf) - 24", velocity: "72", channel: "2"
+)).make;
+PTParallel(\duo, (sections: "pulse 0.6 opening")).make;
+PT(\duo).comment_("two voices, the second entering late");
+
 // -------------------------------------------------------------- the captures
 
 step.(0.4, { var w = PTBrowser.new.window;      step.(0.6, { shoot.("browser", w); w.close }) });
@@ -70,5 +78,7 @@ step.(4.2, { var w = PTPianoRoll(PT(\opening)).window;  step.(0.8, { shoot.("pia
 step.(5.6, { var w = PT(\funnel).draw.window;   step.(0.8, { shoot.("mask-editor", w); w.close }) });
 step.(7.0, { var w = PT(\arch).draw.window;     step.(0.8, { shoot.("shape-editor", w); w.close }) });
 
-step.(8.4, { "\n% screenshot(s) in %".format(shots.size, dir).postln });
+step.(8.4, { var w = PTPianoRoll(PT(\duo)).window; step.(0.8, { shoot.("piano-roll-parallel", w); w.close }) });
+
+step.(9.8, { "\n% screenshot(s) in %".format(shots.size, dir).postln });
 )

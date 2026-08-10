@@ -289,6 +289,226 @@ TestPatternToolbox : UnitTest {
 			"it behaves as an ordinary pattern");
 	}
 
+	// ------------------------------------------------------------ combinations
+
+	prTwoSections {
+		PTDataSection(\a, (clock: "100", number: "10", rhythm: "1", pitch: "60")).make;
+		PTDataSection(\b, (clock: "100", number: "10", rhythm: "1", pitch: "72")).make;
+	}
+
+	test_sequence {
+		var seq;
+		this.prTwoSections;
+		seq = PTSequence(\both, (sections: "a b")).make;
+		this.assertEquals(seq.numNotes, 20, "every note of both sections");
+		this.assertFloatEquals(seq.duration, 2.0, "the durations add up");
+		this.assertEquals(seq.extract(\pitch).keep(10), 10.collect { 60 }, "a comes first");
+		this.assertEquals(seq.extract(\pitch).drop(10), 10.collect { 72 }, "then b");
+	}
+
+	test_sequenceWithDelay {
+		var seq;
+		this.prTwoSections;
+		seq = PTSequence(\both, (sections: "a 3 b")).make;
+		this.assertFloatEquals(seq.duration, 5.0, "a number between names is a delay in seconds");
+		this.assertFloatEquals(seq.asEvents[9][\dur], 3.1,
+			"the gap becomes a long dur on the note before it");
+		this.assertFloatEquals(seq.asEvents[9][\sustain], 0.1,
+			"but that note still sounds for its own length");
+	}
+
+	test_parallel {
+		var par;
+		this.prTwoSections;
+		par = PTParallel(\both, (sections: "a b")).make;
+		this.assertEquals(par.numNotes, 20, "every note of both sections");
+		this.assertFloatEquals(par.duration, 1.0, "they overlap, so the total is not the sum");
+		this.assertEquals(par.extract(\pitch).keep(4), [60, 72, 60, 72],
+			"the voices interleave by time");
+	}
+
+	test_parallelWithOffset {
+		var par;
+		this.prTwoSections;
+		par = PTParallel(\both, (sections: "a 0.5 b")).make;
+		this.assertFloatEquals(par.duration, 1.5, "b starts half a second in");
+		this.assertEquals(par.extract(\pitch).keep(5), [60, 60, 60, 60, 60],
+			"a alone until b arrives");
+	}
+
+	test_timed {
+		var timed;
+		this.prTwoSections;
+		timed = PTTimed(\both, (sections: "a b", times: "0 2")).make;
+		this.assertFloatEquals(timed.duration, 3.0, "b starts at two seconds");
+		this.assertEquals(timed.extract(\pitch).keep(10), 10.collect { 60 }, "a first");
+	}
+
+	test_timedLeadingRest {
+		var timed;
+		this.prTwoSections;
+		timed = PTTimed(\one, (sections: "a", times: "1")).make;
+		this.assertEquals(timed.asEvents[0][\type], \rest, "an offset start begins with a rest");
+		this.assertFloatEquals(timed.asEvents[0][\dur], 1.0, "of the right length");
+		this.assertEquals(timed.numNotes, 10, "and the notes follow");
+	}
+
+	test_combinationsNest {
+		var inner, outer;
+		this.prTwoSections;
+		inner = PTSequence(\inner, (sections: "a b")).make;
+		outer = PTParallel(\outer, (sections: "inner 1 inner")).make;
+		this.assertEquals(outer.numNotes, 40, "a combination is a section like any other");
+		this.assertFloatEquals(outer.duration, 3.0, "the second copy starts a second late");
+	}
+
+	// ------------------------------------------------------------- transformers
+
+	test_transpose {
+		var section = PTDataSection(\s1, (number: "6", pitch: "60")).make;
+		var higher = PTDerived.of(\up, "s1", "PT.transpose(12)");
+		this.assertEquals(higher.extract(\pitch), 6.collect { 72 }, "transposed");
+		this.assertEquals(section.extract(\pitch), 6.collect { 60 }, "the source is untouched");
+	}
+
+	test_transposeWithAGenerator {
+		PTDataSection(\s1, (number: "4", pitch: "60")).make;
+		this.assertEquals(PTDerived.of(\up, "s1", "PT.transpose(Pseq([0, 1, 2, 3]))").extract(\pitch),
+			[60, 61, 62, 63], "a generator gives a different interval per note");
+	}
+
+	test_transformsChainLeftToRight {
+		PTDataSection(\s1, (number: "3", pitch: "60")).make;
+		this.assertEquals(
+			PTDerived.of(\x, "s1", "[PT.transpose(24), PT.limit(60, 70)]").extract(\pitch),
+			[70, 70, 70], "transpose then clip");
+		this.assertEquals(
+			PTDerived.of(\y, "s1", "[PT.limit(60, 70), PT.transpose(24)]").extract(\pitch),
+			[84, 84, 84], "clip then transpose is a different result");
+	}
+
+	test_foldQuantizeStretch {
+		PTDataSection(\s1, (clock: "100", number: "3", rhythm: "1", pitch: "80")).make;
+		this.assertEquals(PTDerived.of(\f, "s1", "PT.fold(60, 72)").extract(\pitch),
+			[64, 64, 64], "fold reflects back into the range");
+		this.assertEquals(PTDerived.of(\q, "s1", "PT.quantize(12)").extract(\pitch),
+			[84, 84, 84], "quantize rounds to a unit");
+		this.assertFloatEquals(PTDerived.of(\st, "s1", "PT.stretch(2)").duration, 0.6,
+			"stretch scales time");
+	}
+
+	test_velocityTransformReachesAmp {
+		var section, louder;
+		PTDataSection(\s1, (number: "3", velocity: "60")).make;
+		louder = PTDerived.of(\loud, "s1", "PT.louder(40)");
+		this.assertEquals(louder.extract(\velocity), [100, 100, 100], "velocity raised");
+		this.assertFloatEquals(louder.asPattern.asStream.next(())[\amp], 100 / 127,
+			"amp is derived from velocity, so the change is audible");
+	}
+
+	test_filterRejectMute {
+		PTDataSection(\s1, (clock: "100", number: "4", rhythm: "1", pitch: "60 72 60 72")).make;
+		this.assertEquals(
+			PTDerived.of(\f, "s1", "PT.filter({ |e| e.midinote > 65 })").extract(\pitch),
+			[72, 72], "filter keeps what the test accepts");
+		this.assertEquals(
+			PTDerived.of(\r, "s1", "PT.reject({ |e| e.midinote > 65 })").extract(\pitch),
+			[60, 60], "reject is the inverse");
+		this.assertFloatEquals(PTDerived.of(\f2, "s1", "PT.filter({ |e| e.midinote > 65 })").duration,
+			0.2, "filtering closes the gaps, so the section gets shorter");
+		this.assertFloatEquals(PTDerived.of(\m, "s1", "PT.mute({ |e| e.midinote > 65 })").duration,
+			0.4, "muting keeps the timing");
+		this.assertEquals(PT(\m).numNotes, 2, "but silences the notes");
+	}
+
+	test_dedupe {
+		PTDataSection(\s1, (number: "6", pitch: "60 60 62 62 62 64")).make;
+		this.assertEquals(PTDerived.of(\d, "s1", "PT.dedupe").extract(\pitch), [60, 62, 64],
+			"immediate repetitions are dropped");
+	}
+
+	test_reverseSliceKeepDrop {
+		PTDataSection(\s1, (number: "5", pitch: "60 61 62 63 64")).make;
+		this.assertEquals(PTDerived.of(\r, "s1", "PT.reverse").extract(\pitch),
+			[64, 63, 62, 61, 60], "reverse");
+		this.assertEquals(PTDerived.of(\s, "s1", "PT.slice(1, 3)").extract(\pitch), [61, 62],
+			"slice by event index, to exclusive");
+		this.assertEquals(PTDerived.of(\k, "s1", "PT.keep(2)").extract(\pitch), [60, 61], "keep");
+		this.assertEquals(PTDerived.of(\dr, "s1", "PT.drop(3)").extract(\pitch), [63, 64], "drop");
+	}
+
+	test_transformIf {
+		PTDataSection(\s1, (number: "4", pitch: "60 72 60 72")).make;
+		this.assertEquals(
+			PTDerived.of(\x, "s1", "PT.transformIf({ |e| e.midinote > 65 }, PT.transpose(12))")
+				.extract(\pitch),
+			[60, 84, 60, 84], "only the matching events move, and nothing changes place");
+	}
+
+	test_derivedFollowsItsSource {
+		var derived;
+		PTDataSection(\s1, (number: "20", pitch: "Pwhite(40, 80)")).make;
+		derived = PTDerived.of(\up, "s1", "PT.transpose(12)");
+		this.assertEquals(derived.extract(\pitch), PT(\s1).extract(\pitch) + 12, "follows the source");
+		PT(\s1).make;                    // a new realization of the source
+		derived.make;
+		this.assertEquals(derived.extract(\pitch), PT(\s1).extract(\pitch) + 12,
+			"and follows it again after a remake");
+	}
+
+	test_derivedJoinsSeveralSources {
+		var joined;
+		this.prTwoSections;
+		joined = PTDerived.of(\j, "a b", "PT.transpose(1)");
+		this.assertEquals(joined.numNotes, 20, "several sources are joined in sequence");
+		this.assertEquals(joined.extract(\pitch).keep(2), [61, 61], "then transformed");
+	}
+
+	// ------------------------------------------------------------- communities
+
+	test_communityMembers {
+		var community;
+		this.prTwoSections;
+		community = PTCommunity.of(\group, \a, \b);
+		this.assertEquals(community.names, [\a, \b], "names, not music");
+		this.assertEquals(community.size, 2, "size");
+		this.assertEquals(community.sections.collect(_.name), [\a, \b], "the objects behind them");
+	}
+
+	test_communityOfVariants {
+		var community;
+		PTDataSection(\noise, (number: "12", pitch: "Pwhite(40, 80)")).make;
+		community = PTCommunity.variantsOf(\family, \noise, 4);
+		this.assertEquals(community.names, [\noise1, \noise2, \noise3, \noise4],
+			"variants are named after the source");
+		this.assert(community.sections.every { |s| s.isMade }, "and are made");
+		this.assert(community.sections.collect(_.seed).asSet.size == 4, "each with its own seed");
+		this.assertEquals(community.sections[0].spec.at(\pitch), PT(\noise).spec.at(\pitch),
+			"all sharing the source rules");
+	}
+
+	test_communityVariantsDoNotPileUp {
+		var community;
+		PTDataSection(\noise, (number: "6", pitch: "Pwhite(40, 80)")).make;
+		community = PTCommunity.variantsOf(\family, \noise, 3);
+		community.make;
+		community.make;
+		this.assertEquals(PT.names(\section).size, 4,
+			"remaking reuses the variant names rather than piling up new ones");
+	}
+
+	test_communityFolding {
+		var community, sequence, parallel;
+		this.prTwoSections;
+		community = PTCommunity.of(\group, \a, \b);
+		sequence = community.asSequence(\groupSeq);
+		parallel = community.asParallel(\groupPar);
+		this.assertFloatEquals(sequence.duration, 2.0, "folded into a sequence");
+		this.assertFloatEquals(parallel.duration, 1.0, "or into a parallel section");
+		this.assertFloatEquals(community.asSequence(\spaced, 1).duration, 3.0,
+			"with a delay between members");
+	}
+
 	// --------------------------------------------------------- gui, pure parts
 
 	test_browserFilter {
@@ -318,6 +538,17 @@ TestPatternToolbox : UnitTest {
 		this.assert(layout[\hiNote] - layout[\loNote] >= 12, "at least an octave is shown");
 		this.assert(layout[\rects][0][0] < layout[\rects][2][0], "time runs to the right");
 		this.assert(layout[\rects][0][1] > layout[\rects][3][1], "pitch runs upwards");
+	}
+
+	test_pianoRollUsesSustainForWidth {
+		var layout, widths;
+		this.prTwoSections;
+		PTParallel(\both, (sections: "a b")).make;
+		layout = PTPianoRoll.computeLayout(PT(\both).asEvents, 800, 400);
+		widths = layout[\rects].collect { |r| r[2] };
+		this.assert(widths.every { |w| w > 1 },
+			"coincident voices have a dur of zero, so the bar width must come from sustain");
+		this.assertEquals(widths.asSet.size, 1, "and every note here is the same length");
 	}
 
 	test_pianoRollLayoutHandlesChordsAndEmpty {

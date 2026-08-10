@@ -44,13 +44,19 @@ PTPianoRoll {
 
 		rects = Array.new(events.size);
 		events.do { |event|
+			// dur advances the clock, sustain is how long the note sounds. In a
+			// combination they differ: coincident voices have a dur of zero.
 			var duration = event[\dur] ? 0;
+			var length = event[\sustain] ? duration;
 			var isRest = event[\type] == \rest;
 			var pitches = (event[\midinote] ? loNote).asArray;
 			var x = margin + (time / total * plotWidth);
-			var w = max(duration / total * plotWidth, 1);
+			var w = max(length / total * plotWidth, 1);
 			if(isRest) {
-				rects = rects.add([x, margin + plotHeight - (rowHeight * 0.5), w, 2, true, 0]);
+				rects = rects.add([
+					x, margin + plotHeight - (rowHeight * 0.5),
+					max(duration / total * plotWidth, 1), 2, true, 0
+				]);
 			} {
 				pitches.do { |pitch|
 					var y = margin + plotHeight - ((pitch - loNote + 1) / (span + 1) * plotHeight);

@@ -179,6 +179,30 @@ for every object type, so the interface stays predictable; `draw` opens the mous
 editor and only shapes and masks answer it. The browser and the dialog show a
 draw button only when the selected object responds to it.
 
+**\dur is a delta, \sustain is a length.** A single section has them equal. A
+combination does not: two voices sounding at the same instant produce one event
+with `\dur: 0` and a full `\sustain`. Separating the two is what lets voices
+overlap at all, and it means the piano roll must take its bar width from
+`\sustain` and advance its clock by `\dur`.
+
+**A transformation is an object, not a mutation.** The AC Toolbox applies a
+transformer to an object in place, which quietly breaks its own central
+invariant: afterwards the object's rules no longer describe its result. Here a
+transformed section is a `PTDerived` whose rules name a source and a list of
+transforms. Remake it and the transformation runs again; remake the source first
+and the whole chain follows. This also settles the open question about editing
+realized output: you never edit output, you derive from it.
+
+**Velocity is stored, amp is derived.** Events carry `\velocity` (0 to 127) and
+`asPattern` computes `\amp` from it at playback time. Storing both invited a
+whole class of bug where a transform raised the velocity and nothing got louder.
+
+**A community that generates variants must be defined before them in an
+archive.** `PTCommunity` realization has a side effect: it creates the variant
+objects. Creation order guarantees the right order in a saved file, since the
+variants come into existence during the community's own first make. Worth knowing
+before hand-editing a `.ptx`.
+
 **Stockpile has one source slot, not three dialogs.** The original separates
 specify, generate and construct. Here the mode is inferred from what the source
 evaluates to: a bare token run is a list, an expression producing a list is a
@@ -197,10 +221,11 @@ PTObject                     name, spec, value, seed; make / specify / variant
 │   ├── PTDataSection        per parameter, calculated independently         [done]
 │   ├── PTNoteSection        driven by note structures
 │   ├── PTDensitySection     driven by time, filled by a function or a shape
-│   └── PTCombination        sequential | parallel | timed
+│   ├── PTDerived            another section, transformed                    [done]
+│   └── PTCombination        PTSequence | PTParallel | PTTimed              [done]
 ├── PTController             a stream with state, history and reset
 ├── PTScheme                 an ordered remake list
-├── PTCommunity              sections grouped in name only
+├── PTCommunity              sections grouped in name only                   [done]
 ├── PTBind                   live, Pdef-backed; no frozen output
 └── PTCode                   a saved sclang snippet
 ```
@@ -295,17 +320,17 @@ tutorial asks you to make section2 out of section1.
 | 0 | `PT`, `PTObject`, `PTSpec`, `PTStockpile`, `PTDataSection`, archive | Tutorials 1 and 2 reproducible from the interpreter, under test | **done** |
 | 1 | `PTBrowser`, generic object view, Make / Variant / Play / Plot, piano roll | Tutorials 1 and 2 reproducible by clicking | **done** |
 | 2 | `PTShape`, `PTMask`, drawing editors, `convert` and `readFrom` | Tutorials 3 and 4 | **done** |
-| 3 | Combinations, transformers, filters, `PTCommunity` | Tutorials 5, 7, 23, 25 | next |
-| 4 | `PTController`, `PTScheme` | Tutorial 13, the level higher | |
+| 3 | Combinations, transformers, filters, `PTCommunity` | Tutorials 5, 7, 23, 25 | **done** |
+| 4 | `PTController`, `PTScheme` | Tutorial 13, the level higher | next |
 | 5 | `PTNoteStructure`, note and density sections | Tutorials 8, 9, 10 | |
 | 6 | `PTBind`, MIDI in and out, NRT and MIDI file export, Pbind source export | new ground | |
 | 7 | Generator library: Koenig selection principles, chaos, 1/f, transition tables, mutations | Tutorial 24 and the Annotated Index | |
 
 ## 12. Open questions
 
-1. **Editing realized output.** The AC Toolbox lets you edit an object's output
-   values directly in a table, which breaks the link back to the spec. Output is
-   read-only here for now. Revisit after the browser exists.
+1. ~~**Editing realized output.**~~ Settled in phase 3: output stays read-only and
+   `PTDerived` covers the need. You transform a section into a new named object
+   rather than editing its events, which keeps every object's rules honest.
 2. **How far to carry MIDI.** The original is a MIDI program with sound synthesis
    bolted on. This is a SuperCollider program, so the SynthDef is primary and
    MIDI is an export target. `\chan` and `\velocity` are carried on every event

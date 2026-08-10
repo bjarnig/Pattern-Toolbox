@@ -68,7 +68,6 @@ PTDataSection : PTSection {
 				dur: duration,
 				midinote: PT.midinote(pitch),
 				velocity: PT.velocity(velocity),
-				amp: PT.velocity(velocity) / 127,
 				chan: channel,
 				instrument: instrument.asSymbol
 			);

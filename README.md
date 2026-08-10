@@ -7,10 +7,10 @@ over SuperCollider patterns. You make an object, it gets a name, you can look at
 it, hear it, edit its rules, remake it, make a variant of it, and refer to it
 from any other object. The rules and one specific result are both kept.
 
-Status: **phase 2**. The object model, stockpiles, data sections, shapes, masks,
-the archive format, the browser, the object dialogs, the drawing editor and the
-piano roll all work and are covered by tests. Combinations and transformers are
-next.
+Status: **phase 3**. The object model, stockpiles, data sections, shapes, masks,
+combinations, transformers, filters, communities, the archive format, the
+browser, the object dialogs, the drawing editor and the piano roll all work and
+are covered by tests. Controllers and schemes are next.
 
 ![the browser and an object dialog](doc/images/object-dialog.png)
 
@@ -109,6 +109,57 @@ lines rather than a filled band:
 pitch: "mask1.convert(PT.fromNumber, 48, 72, PTbeta(0.0, 100, 0.1, 0.1))"
 ```
 
+## Combining sections
+
+```supercollider
+PTSequence(\pair, (sections: "bass lead")).make.play;      // one after another
+PTSequence(\spaced, (sections: "bass 2 lead")).make;       // a 2 second gap
+PTParallel(\duo, (sections: "bass lead")).make;            // at the same time
+PTParallel(\stagger, (sections: "bass 0.4 lead")).make;    // the second enters late
+PTTimed(\entries, (sections: "bass lead", times: "0 1.5")).make;
+```
+
+A combination is a section like any other, so they nest.
+
+## Transforming sections
+
+A transformed section is its own named object. Its rules say what was done, so it
+can be remade, varied and saved like anything else, and the source is untouched.
+
+```supercollider
+PTDerived(\up, (source: "lead", transform: "PT.transpose(12)")).make.play;
+
+PTDerived(\shaped, (
+	source:    "lead",
+	transform: "[PT.slice(8, 24), PT.stretch(2), PT.fold(c3, c5)]"
+)).make.play;
+```
+
+Transforms apply left to right. Amounts can be constants, lists or generators, so
+`PT.transpose(Pwhite(-5, 5))` moves every note by a different interval.
+
+| values | `add` `multiply` `set` `transpose` `louder` `limit` `fold` `quantize` |
+| --- | --- |
+| time | `stretch` |
+| structure | `filter` `reject` `mute` `dedupe` `reverse` `slice` `keep` `drop` |
+| conditional | `transformIf` |
+
+`filter` keeps what the test accepts and closes the gaps, so the section gets
+shorter. `mute` silences instead, keeping the timing.
+
+## Communities
+
+A group of sections joined in name only, either listed or generated as variants
+of one section.
+
+```supercollider
+PTCommunity(\voices, (members: "bass lead")).make;
+PTCommunity(\family, (source: "lead", number: "5")).make;   // lead1 ... lead5
+
+PT(\family).asSequence(\chain, 0.5).play;    // hear the variants in a row
+PT(\family).asParallel(\cloud, 0.25).play;   // or all at once, staggered
+```
+
 ## The browser
 
 ```supercollider
@@ -149,6 +200,11 @@ velocity. On the right, 220 notes read from the mask above at its boundaries wit
 | | |
 | --- | --- |
 | ![piano roll of notes](doc/images/piano-roll-notes.png) | ![piano roll of a mask](doc/images/piano-roll.png) |
+
+A parallel combination. `\dur` is the time to the next event and `\sustain` is
+how long a note sounds, which is what lets voices overlap.
+
+![two voices in parallel](doc/images/piano-roll-parallel.png)
 
 Regenerate them all with `doc/make-screenshots.scd`, which uses
 `Image.fromWindow`, so Qt renders each window itself and the result does not

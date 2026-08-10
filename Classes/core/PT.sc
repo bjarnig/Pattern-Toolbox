@@ -266,6 +266,30 @@ PT {
 		^indices.collect { |i| values[i] }
 	}
 
+	// ----------------------------------------------------------- transformers
+
+	// Thin forwarders onto PTTransform. PT. reads as a namespace and keeps slot
+	// text short: "PT.transpose(12)" rather than "PTTransform.transpose(12)".
+
+	*add { |key, amount| ^PTTransform.add(key, amount) }
+	*multiply { |key, factor| ^PTTransform.multiply(key, factor) }
+	*set { |key, source| ^PTTransform.set(key, source) }
+	*transpose { |interval| ^PTTransform.transpose(interval) }
+	*louder { |amount| ^PTTransform.louder(amount) }
+	*limit { |lo, hi, key = \midinote| ^PTTransform.limit(lo, hi, key) }
+	*fold { |lo, hi, key = \midinote| ^PTTransform.fold(lo, hi, key) }
+	*quantize { |unit, key = \midinote| ^PTTransform.quantize(unit, key) }
+	*stretch { |factor| ^PTTransform.stretch(factor) }
+	*filter { |test| ^PTTransform.filter(test) }
+	*reject { |test| ^PTTransform.reject(test) }
+	*mute { |test| ^PTTransform.mute(test) }
+	*dedupe { |key = \midinote| ^PTTransform.dedupe(key) }
+	*reverse { ^PTTransform.reverse }
+	*slice { |from = 0, to| ^PTTransform.slice(from, to) }
+	*keep { |n| ^PTTransform.keep(n) }
+	*drop { |n| ^PTTransform.drop(n) }
+	*transformIf { |test, transform| ^PTTransform.transformIf(test, transform) }
+
 	*prSetCurrentNumber { |n| currentNumber = n }
 
 	*newSeed { ^1000000.rand }

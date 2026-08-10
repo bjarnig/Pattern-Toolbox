@@ -14,6 +14,32 @@ PTSection : PTObject {
 
 	asEvents { ^this.prRequireMade.value }
 
+	// [absoluteStart, event] pairs, with \sustain filled in so a combination can
+	// let voices overlap. Rests only advance the clock, so they are not carried
+	// over: a gap comes back as a long \dur when the pairs are flattened.
+	asTimedEvents { |offset = 0|
+		var time = offset;
+		var out = Array.new(this.length);
+		this.asEvents.do { |event|
+			var copy = event.copy;
+			copy[\sustain] = copy[\sustain] ?? { copy[\dur] };
+			if(event[\type] != \rest) { out = out.add([time, copy]) };
+			time = time + (event[\dur] ? 0);
+		};
+		^out
+	}
+
+	// Velocity is what a section stores; amp is derived here, so any transform
+	// that touches velocity is automatically audible.
+	asPattern {
+		var events = this.asEvents.collect { |event|
+			var copy = event.copy;
+			copy[\amp] = (copy[\velocity] ? 64) / 127;
+			copy
+		};
+		^Pseq(events, 1)
+	}
+
 	// -------------------------------------------------------------- accessors
 
 	notes { ^this.asEvents.reject { |event| event[\type] == \rest } }
