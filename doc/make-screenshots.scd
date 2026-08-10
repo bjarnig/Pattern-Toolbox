@@ -69,6 +69,12 @@ PTDataSection(\pulse, (
 PTParallel(\duo, (sections: "pulse 0.6 opening")).make;
 PT(\duo).comment_("two voices, the second entering late");
 
+// a controller and a scheme, so the browser shows every object type
+PTController(\howMany, (source: "Pseries(12, 6, 5)")).make;
+PT(\howMany).comment_("more notes with every make");
+PTScheme(\round, (members: "funnel tendency", reset: "howMany")).make;
+PT(\round).comment_("remake the mask, then what reads it");
+
 // -------------------------------------------------------------- the captures
 
 step.(0.4, { var w = PTBrowser.new.window;      step.(0.6, { shoot.("browser", w); w.close }) });

@@ -45,7 +45,7 @@ PTCommunity : PTObject {
 		if(source.isKindOf(PTObject).not) {
 			Error("PT: community % has no source section".format(name)).throw
 		};
-		number = if(spec.isEmptyAt(\number)) { 1 } { spec.value(\number).asInteger };
+		number = if(spec.isEmptyAt(\number)) { 1 } { PT.scalar(spec.value(\number)).asInteger };
 
 		^number.collect { |i|
 			var variantName = (source.name.asString ++ (i + 1)).asSymbol;
@@ -100,6 +100,21 @@ PTCommunity : PTObject {
 
 	// A community is used as its list of names.
 	asPTValue { ^this }
+
+	// Freeze generated members when saving. Without this, loading regenerates the
+	// variants and then their own definitions remake them, so every controller in
+	// play is asked for twice as many values as it was originally and nothing
+	// reloads faithfully. The generative rule stays in source and number: clear
+	// members to get it back.
+	prCodeSpec {
+		var frozen;
+		if(this.isMade.not or: { spec.isEmptyAt(\members).not }) { ^spec };
+		frozen = spec.copy;
+		// symbols, not bare names: the members do not exist yet when a community
+		// is read back, so bare names would not resolve
+		frozen.put(\members, this.names.asCompileString);
+		^frozen
+	}
 
 	postValues {
 		this.objects.do(_.postInfo);

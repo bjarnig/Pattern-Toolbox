@@ -7,10 +7,11 @@ over SuperCollider patterns. You make an object, it gets a name, you can look at
 it, hear it, edit its rules, remake it, make a variant of it, and refer to it
 from any other object. The rules and one specific result are both kept.
 
-Status: **phase 3**. The object model, stockpiles, data sections, shapes, masks,
-combinations, transformers, filters, communities, the archive format, the
-browser, the object dialogs, the drawing editor and the piano roll all work and
-are covered by tests. Controllers and schemes are next.
+Status: **phase 4**. The object model, stockpiles, data sections, shapes, masks,
+combinations, transformers, filters, communities, controllers, schemes, the
+archive format, the browser, the object dialogs, the drawing editor and the piano
+roll all work and are covered by tests. Note structures and density sections are
+next.
 
 ![the browser and an object dialog](doc/images/object-dialog.png)
 
@@ -158,6 +159,65 @@ PTCommunity(\family, (source: "lead", number: "5")).make;   // lead1 ... lead5
 
 PT(\family).asSequence(\chain, 0.5).play;    // hear the variants in a row
 PT(\family).asParallel(\cloud, 0.25).play;   // or all at once, staggered
+```
+
+## Controllers: relating one section to the next
+
+A generator inside a section's rules knows nothing about the previous section, so
+it cannot say anything about the relation between them. A controller keeps its
+state outside any section and remembers what it has done.
+
+```supercollider
+PTController(\howMany, (source: "2 10 20")).make;
+PTDataSection(\bit, (number: "howMany", pitch: "Pwhite(c3, c5)")).specify;
+
+PT(\bit).make.length;   // 2
+PT(\bit).make.length;   // 10
+PT(\bit).make.length;   // 20
+```
+
+Used bare, a controller gives a value per note. `PT.takeOne` pulls one value and
+holds it for the whole section, which is how a run of variants can trend:
+
+```supercollider
+PTController(\ceiling, (source: "Pseries(3.0, -0.375, 5)")).make;
+PTDataSection(\gesture, (
+	number: "24",
+	rhythm: "PTbeta(1.0, PT.takeOne(ceiling), 0.2, 0.2)"
+)).specify;
+
+PTCommunity(\gestures, (source: "gesture", number: "5")).make;
+// five variants, each tending faster than the last
+```
+
+Two controllers synchronised to a third see the same value, so two parameters can
+be derived from one decision, note for note:
+
+```supercollider
+PTController(\choose, (source: "Prand([1, 2, 3, 10], inf)")).make;
+PTController(\forRhythm, (syncTo: "choose")).make;
+PTController(\forVelocity, (syncTo: "choose")).make;
+PTStockpile(\table, (source: "1 40 2 55 3 70 10 110")).make;
+
+PTDataSection(\linked, (
+	rhythm:   "forRhythm",
+	velocity: "PT.lookup(forVelocity, table)"
+)).make;   // short notes quiet, long notes loud
+```
+
+`PT(\name).history` is everything a controller has handed out; `reset` starts it
+again, and a given seed replays a given history exactly.
+
+## Schemes
+
+A script for remaking objects in a fixed order: convenience, because a section
+that reads a generated shape needs the shape remade first, and design, because
+the order is itself a decision.
+
+```supercollider
+PTScheme(\round, (members: "curve theme", reset: "ceiling")).make;
+PT(\round).apply;
+PT(\round).applyTimes(3);
 ```
 
 ## The browser

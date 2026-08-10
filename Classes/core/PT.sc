@@ -266,6 +266,37 @@ PT {
 		^indices.collect { |i| values[i] }
 	}
 
+	// One value, where a slot needs a single number rather than a series. A
+	// controller advances by one; a pattern or a list gives up its first value.
+	*scalar { |x|
+		if(x.isKindOf(PTController)) { ^x.next };
+		if(x.isKindOf(Stream) or: { x.isKindOf(Pattern) }) { ^this.asStream(x).next };
+		if(x.isKindOf(SequenceableCollection) and: { x.isString.not }) { ^x.first };
+		^x
+	}
+
+	// The AC Toolbox take-one: pull one value and hand that single value on, so a
+	// generator built from it uses the same value throughout the section.
+	*takeOne { |x|
+		if(x.isKindOf(Symbol)) { x = this.at(x) };
+		if(x.isKindOf(PTController)) { ^x.takeOne };
+		^this.scalar(x)
+	}
+
+	// Map values through a lookup table given as pairs: key, value, key, value.
+	// The AC Toolbox way of relating one parameter to another, usually with two
+	// controllers synchronised to a third so both see the same incoming value.
+	*lookup { |source, table, default|
+		var stream = this.asStream(source);
+		var pairs = Dictionary.new;
+		if(table.isKindOf(PTObject)) { table = table.asPTValue };
+		table.asArray.pairsDo { |key, item| pairs[key] = item };
+		^Pfunc({
+			var incoming = stream.next;
+			pairs[incoming] ?? { default ?? incoming }
+		})
+	}
+
 	// ----------------------------------------------------------- transformers
 
 	// Thin forwarders onto PTTransform. PT. reads as a namespace and keeps slot

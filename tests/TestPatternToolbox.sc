@@ -509,6 +509,146 @@ TestPatternToolbox : UnitTest {
 			"with a delay between members");
 	}
 
+	// ------------------------------------------------------------- controllers
+
+	test_controllerRemembersBetweenSections {
+		var controller = PTController.of(\howMany, "5 10 20");
+		this.assertEquals(controller.next, 5, "first value");
+		this.assertEquals(controller.next, 10, "second value");
+		this.assertEquals(controller.next, 20, "third value");
+		this.assertEquals(controller.next, 5, "and the list cycles");
+		this.assertEquals(controller.history, [5, 10, 20, 5], "the history is kept");
+	}
+
+	test_controllerInASection {
+		PTController.of(\howMany, "2 10 20");
+		PTDataSection(\bit, (number: "howMany", pitch: "60")).specify;
+		this.assertEquals(PT(\bit).make.length, 2, "the first make gets 2 notes");
+		this.assertEquals(PT(\bit).make.length, 10, "the second gets 10");
+		this.assertEquals(PT(\bit).make.length, 20, "the third gets 20");
+	}
+
+	test_controllerAsAStreamInAParameter {
+		PTController.of(\steps, "60 62 64");
+		PTDataSection(\s1, (number: "6", pitch: "steps")).make;
+		this.assertEquals(PT(\s1).extract(\pitch), [60, 62, 64, 60, 62, 64],
+			"used bare, a controller supplies a value per note");
+		this.assertEquals(PT(\steps).history.size, 6, "and every one is recorded");
+	}
+
+	test_takeOneHoldsForTheWholeSection {
+		PTController.of(\base, "60 72");
+		PTDataSection(\s1, (number: "4", pitch: "PT.takeOne(base)")).make;
+		this.assertEquals(PT(\s1).extract(\pitch), [60, 60, 60, 60],
+			"take-one pulls a single value and holds it");
+		this.assertEquals(PT(\base).history.size, 1, "only one value was consumed");
+		PT(\s1).make;
+		this.assertEquals(PT(\s1).extract(\pitch), [72, 72, 72, 72], "the next make moves on");
+	}
+
+	test_controllerCyclesAFinitePattern {
+		var controller = PTController.of(\ramp, "Pseries(1, 1, 3)");
+		this.assertEquals(4.collect { controller.next }, [1, 2, 3, 1],
+			"a finite pattern cycles, so a controller never runs dry");
+	}
+
+	test_controllerReset {
+		var controller = PTController.of(\c1, "1 2 3");
+		controller.next; controller.next;
+		controller.reset;
+		this.assertEquals(controller.history, [], "reset wipes the history");
+		this.assertEquals(controller.next, 1, "and starts again from the beginning");
+	}
+
+	test_controllerHistoryIsReproducible {
+		var controller = PTController.of(\c1, "Pwhite(0, 1000)");
+		var first = 10.collect { controller.next };
+		controller.reset;
+		this.assertEquals(10.collect { controller.next }, first,
+			"the same seed replays the same history");
+		controller.make;
+		this.assert(10.collect { controller.next } != first, "a fresh make does not");
+	}
+
+	test_synchronisedControllers {
+		var master = PTController.of(\master, "Pwhite(0, 100000)");
+		var a = PTController.syncedTo(\a, \master);
+		var b = PTController.syncedTo(\b, \master);
+		var first = a.next;
+		this.assertEquals(b.next, first, "the follower that asks second sees the same value");
+		this.assert(a.next != first, "asking again makes the master produce a new one");
+		this.assertEquals(master.history.size, 0, "the master was never asked directly");
+		this.assertEquals(a.history.size, 2, "each follower records what it saw");
+	}
+
+	test_synchronisedControllersRelateTwoParameters {
+		var pitches;
+		PTController.of(\pick, "60 72");
+		PTController.syncedTo(\forPitch, \pick);
+		PTController.syncedTo(\forVelocity, \pick);
+		PTDataSection(\s1, (
+			number: "4", pitch: "forPitch",
+			velocity: "PT.lookup(forVelocity, [60, 40, 72, 100])"
+		)).make;
+		pitches = PT(\s1).extract(\pitch);
+		this.assertEquals(pitches, [60, 72, 60, 72], "pitch follows the shared value");
+		this.assertEquals(PT(\s1).extract(\velocity), pitches.collect { |p|
+			if(p == 60) { 40 } { 100 }
+		}, "and velocity is derived from the very same value, note by note");
+	}
+
+	test_scalarCoercion {
+		this.assertEquals(PT.scalar(5), 5, "a number passes through");
+		this.assertEquals(PT.scalar([7, 8, 9]), 7, "a list gives its first value");
+		this.assert(PT.scalar(Pwhite(0, 10)).isNumber, "a pattern gives one value");
+	}
+
+	// ------------------------------------------------------------------ schemes
+
+	test_schemeRemakesInOrder {
+		var scheme, order;
+		PTShape.generate(\curve, "Pwhite(0, 100)", "8");
+		PTDataSection(\theme, (number: "10", pitch: "curve.convert(PT.fromNumber, 48, 72)")).make;
+		scheme = PTScheme.of(\round, \curve, \theme);
+		this.assertEquals(scheme.names, [\curve, \theme], "the members, in order");
+		order = [PT(\curve).value, PT(\theme).extract(\pitch)];
+		scheme.apply;
+		this.assert(PT(\curve).value != order[0], "the shape was remade");
+		this.assert(PT(\theme).extract(\pitch) != order[1], "and the section that reads it");
+	}
+
+	test_schemeResetsControllers {
+		var scheme;
+		PTController.of(\howMany, "4 8 12");
+		PTDataSection(\bit, (number: "howMany", pitch: "60")).specify;
+		scheme = PTScheme(\round, (members: "bit", reset: "howMany")).make;
+		scheme.apply;
+		this.assertEquals(PT(\bit).length, 4, "the first pass gets the first value");
+		scheme.apply;
+		this.assertEquals(PT(\bit).length, 4,
+			"and so does the second, because the controller was reset");
+	}
+
+	test_schemeWithoutResetCarriesOn {
+		var scheme;
+		PTController.of(\howMany, "4 8 12");
+		PTDataSection(\bit, (number: "howMany", pitch: "60")).specify;
+		scheme = PTScheme(\round, (members: "bit")).make;
+		scheme.apply;
+		scheme.apply;
+		this.assertEquals(PT(\bit).length, 8,
+			"without a reset the controller carries on, which is the point of it");
+	}
+
+	test_schemeApplyTimes {
+		var lengths;
+		PTController.of(\howMany, "3 6 9");
+		PTDataSection(\bit, (number: "howMany", pitch: "60")).specify;
+		lengths = [];
+		PTScheme(\round, (members: "bit")).make.applyTimes(3, { lengths = lengths.add(PT(\bit).length) });
+		this.assertEquals(lengths, [3, 6, 9], "each pass is one step of the controller");
+	}
+
 	// --------------------------------------------------------- gui, pure parts
 
 	test_browserFilter {
@@ -560,6 +700,25 @@ TestPatternToolbox : UnitTest {
 	}
 
 	// ----------------------------------------------------------------- archive
+
+	test_archiveWithAControllerDrivenCommunity {
+		var path = PathName.tmp +/+ "pt-test-controller.ptx";
+		var before;
+		PTController.of(\howMany, "Prand([5, 10, 20], inf)");
+		PTDataSection(\bit, (clock: "100", number: "howMany", pitch: "Pwhite(48, 72)")).specify;
+		PTCommunity(\bits, (source: "bit", number: "5")).make;
+		before = PT(\bits).sections.collect(_.length);
+		PTArchive.save(path);
+
+		PT.removeAll;
+		PTArchive.load(path);
+		this.assertEquals(PT(\bits).sections.collect(_.length), before,
+			"a controller driven community reloads faithfully");
+		this.assertEquals(PT(\howMany).history.size, 5,
+			"because the community does not regenerate on load and so the controller "
+			"is asked for one value per member, not two");
+		File.delete(path);
+	}
 
 	test_archiveRoundTrip {
 		var path = PathName.tmp +/+ "pt-test-archive.ptx";

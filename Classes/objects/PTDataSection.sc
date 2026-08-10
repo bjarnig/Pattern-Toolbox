@@ -31,8 +31,8 @@ PTDataSection : PTSection {
 		var rhythms, pitches, velocities, channels, instrument;
 		var events, elapsed = 0, index = 0;
 
-		unit = spec.value(\clock, 100) / 1000;   // seconds per clock unit
-		numberSpec = spec.value(\number, 0);
+		unit = PT.scalar(spec.value(\clock, 100)) / 1000;   // seconds per clock unit
+		numberSpec = PT.scalar(spec.value(\number, 0));
 
 		if(numberSpec.isKindOf(PTUntilTime)) {
 			limit = numberSpec.seconds;
@@ -48,7 +48,7 @@ PTDataSection : PTSection {
 		pitches = PT.asStream(spec.valueAsList(\pitch, 60));
 		velocities = PT.asStream(spec.valueAsList(\velocity, \mf));
 		channels = PT.asStream(spec.valueAsList(\channel, 1));
-		instrument = spec.value(\instrument, \default);
+		instrument = PT.scalar(spec.value(\instrument, \default));
 
 		events = Array.new(if(count == inf) { 256 } { count });
 

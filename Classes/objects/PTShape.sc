@@ -36,7 +36,7 @@ PTShape : PTObject {
 
 	realize {
 		var source = spec.valueAsList(\source);
-		var number = if(spec.isEmptyAt(\number)) { nil } { spec.value(\number).asInteger };
+		var number = if(spec.isEmptyAt(\number)) { nil } { PT.scalar(spec.value(\number)).asInteger };
 		if(source.isNil) { ^PTCurve.flat };
 		^PT.collectValues(source, number).collect(_.asFloat)
 	}

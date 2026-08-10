@@ -63,7 +63,8 @@ PTBrowser {
 				PTGUI.button("edit", { this.edit }),
 				PTGUI.button("make", { this.withSelected(_.make) }),
 				PTGUI.button("variant", { this.withSelected { |o| o.variant; this.refresh } }),
-				PTGUI.button("draw", { this.draw })
+				PTGUI.button("draw", { this.draw }),
+				PTGUI.button("apply", { this.apply })
 			),
 			HLayout(
 				PTGUI.button("play", { this.withSelected(_.play) }),
@@ -109,6 +110,16 @@ PTBrowser {
 		^this.withSelected { |object|
 			if(object.isMade.not) { ^PTGUI.alert("PT: % has not been made yet".format(object.name)) };
 			if(object.asEvents.notNil) { PTPianoRoll(object) } { object.plot };
+		}
+	}
+
+	// Apply a scheme, or reset a controller: whichever the selection supports.
+	apply {
+		^this.withSelected { |object|
+			case
+				{ object.respondsTo(\apply) } { object.apply; this.refresh }
+				{ object.respondsTo(\reset) } { object.reset; this.refresh }
+				{ PTGUI.alert("PT: % has nothing to apply".format(object.name)) }
 		}
 	}
 

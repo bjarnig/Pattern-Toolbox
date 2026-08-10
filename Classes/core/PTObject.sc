@@ -149,11 +149,15 @@ PTObject {
 		^this
 	}
 
+	// What gets written to an archive. Usually the spec as it stands, but an
+	// object whose realization creates other objects may need to freeze something.
+	prCodeSpec { ^spec }
+
 	asCode {
 		^"PT.def(%, %, %, seed: %, comment: %);".format(
 			name.asCompileString,
 			this.class.name,
-			spec.asCode,
+			this.prCodeSpec.asCode,
 			seed.asCompileString,
 			comment.asCompileString
 		)

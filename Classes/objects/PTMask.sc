@@ -38,7 +38,7 @@ PTMask : PTObject {
 	}
 
 	realize {
-		var number = if(spec.isEmptyAt(\number)) { nil } { spec.value(\number).asInteger };
+		var number = if(spec.isEmptyAt(\number)) { nil } { PT.scalar(spec.value(\number)).asInteger };
 		^[\top, \bottom].collect { |key|
 			var source = spec.valueAsList(key);
 			if(source.isNil) {

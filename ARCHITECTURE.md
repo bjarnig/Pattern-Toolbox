@@ -203,6 +203,26 @@ objects. Creation order guarantees the right order in a saved file, since the
 variants come into existence during the community's own first make. Worth knowing
 before hand-editing a `.ptx`.
 
+**A controller is the one object whose value changes outside make.** Its `value`
+is its history, and `make` resets it. That is a deliberate exception to the
+spec-to-value invariant, because a controller's whole purpose is to hold state
+that outlives any single realization. The history is still reproducible: values
+are pulled inside a `Routine` whose `randSeed` was set at reset, so a given seed
+replays a given history exactly.
+
+**A controller cycles a finite source.** A list source already cycled, so a
+finite pattern must too. A controller is asked for values an unknown number of
+times and must never run dry; the first version returned `nil` and fed it into
+arithmetic several objects downstream, which was unfindable from the error.
+
+**Generated members are frozen when saved.** A `PTCommunity` that makes variants
+writes its resolved member names into the archive alongside the generative rule.
+Without that, loading regenerates the variants and then their own definitions
+remake them, so every controller in play is asked for twice as many values as it
+was originally and nothing reloads faithfully. This was measured, not assumed:
+before the fix a five-member community consumed ten controller values and came
+back with different lengths.
+
 **Stockpile has one source slot, not three dialogs.** The original separates
 specify, generate and construct. Here the mode is inferred from what the source
 evaluates to: a bare token run is a list, an expression producing a list is a
@@ -223,8 +243,8 @@ PTObject                     name, spec, value, seed; make / specify / variant
 │   ├── PTDensitySection     driven by time, filled by a function or a shape
 │   ├── PTDerived            another section, transformed                    [done]
 │   └── PTCombination        PTSequence | PTParallel | PTTimed              [done]
-├── PTController             a stream with state, history and reset
-├── PTScheme                 an ordered remake list
+├── PTController             a stream with state, history and reset       [done]
+├── PTScheme                 an ordered remake list                        [done]
 ├── PTCommunity              sections grouped in name only                   [done]
 ├── PTBind                   live, Pdef-backed; no frozen output
 └── PTCode                   a saved sclang snippet
@@ -321,8 +341,8 @@ tutorial asks you to make section2 out of section1.
 | 1 | `PTBrowser`, generic object view, Make / Variant / Play / Plot, piano roll | Tutorials 1 and 2 reproducible by clicking | **done** |
 | 2 | `PTShape`, `PTMask`, drawing editors, `convert` and `readFrom` | Tutorials 3 and 4 | **done** |
 | 3 | Combinations, transformers, filters, `PTCommunity` | Tutorials 5, 7, 23, 25 | **done** |
-| 4 | `PTController`, `PTScheme` | Tutorial 13, the level higher | next |
-| 5 | `PTNoteStructure`, note and density sections | Tutorials 8, 9, 10 | |
+| 4 | `PTController`, `PTScheme` | Tutorial 13, the level higher | **done** |
+| 5 | `PTNoteStructure`, note and density sections | Tutorials 8, 9, 10 | next |
 | 6 | `PTBind`, MIDI in and out, NRT and MIDI file export, Pbind source export | new ground | |
 | 7 | Generator library: Koenig selection principles, chaos, 1/f, transition tables, mutations | Tutorial 24 and the Annotated Index | |
 

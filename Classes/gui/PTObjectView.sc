@@ -94,6 +94,10 @@ PTObjectView {
 		var buttons = [
 			PTGUI.button("make", { this.make }),
 			if(object.respondsTo(\draw)) { PTGUI.button("draw", { object.draw }) },
+			if(object.respondsTo(\apply)) { PTGUI.button("apply", { object.apply }) },
+			if(object.respondsTo(\reset)) {
+				PTGUI.button("reset", { object.reset; this.refresh })
+			},
 			PTGUI.button("specify", { this.specify }),
 			PTGUI.button("variant", { this.variant }),
 			PTGUI.button("play", { object.play }),
