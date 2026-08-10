@@ -83,6 +83,11 @@ PTDensityCurve(\swelling, (
 )).make;
 PT(\swelling).comment_("density read from a shape, notes per second");
 
+// a live object: rules only, no frozen result
+PTBind(\live, (clock: "150", rhythm: "Prand([1, 1, 2, -1], inf)",
+	pitch: "Prand(cmajor, inf)", velocity: "Pwhite(50, 110)")).make;
+PT(\live).comment_("plays through a Pdef; edit and make while it sounds");
+
 // -------------------------------------------------------------- the captures
 
 step.(0.4, { var w = PTBrowser.new.window;      step.(0.6, { shoot.("browser", w); w.close }) });

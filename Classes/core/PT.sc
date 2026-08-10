@@ -16,6 +16,7 @@ PT {
 	classvar <>verbose = true;
 
 	classvar <currentNumber;     // dynamic binding read by PT.fromNumber
+	classvar midiOut;            // MIDIOut used by playMidi, when one is set
 	classvar dynamics, letters;
 
 	*initClass {
@@ -95,12 +96,21 @@ PT {
 	// Evaluate as a list. A bare token run such as "60 62 64" or "c4 d4 e4" is a
 	// list in the AC Toolbox sense, not an sclang expression, so wrap it first.
 	*evalList { |code|
-		var s = code.asString.stripWhiteSpace;
+		var s = this.listifySource(code);
 		if(s.isEmpty) { ^[] };
-		if(this.prIsBareTokenList(s)) {
-			s = "[" ++ s.split($ ).reject(_.isEmpty).join(", ") ++ "]";
-		};
 		^this.eval(s)
+	}
+
+	// "60 62 64" is a list in this toolbox but not in sclang. This is the one
+	// place that turns the former into the latter, used both when evaluating a
+	// slot and when exporting one as source.
+	*listifySource { |code|
+		var s = code.asString.stripWhiteSpace;
+		if(s.isEmpty) { ^s };
+		if(this.prIsBareTokenList(s)) {
+			^"[" ++ s.split($ ).reject(_.isEmpty).join(", ") ++ "]"
+		};
+		^s
 	}
 
 	*prIsBareTokenList { |s|
@@ -111,9 +121,11 @@ PT {
 	// Rewrite bare identifiers: registered object -> ~name, pitch name -> midi
 	// note number, dynamic name -> velocity. Skips string literals, symbol
 	// literals, method calls and keyword arguments.
-	*resolve { |code|
+	// inlineObjects writes a referenced object's values into the text instead of
+	// ~name, so exported source can stand on its own outside the toolbox.
+	*resolve { |code, inlineObjects = false|
 		var out, i = 0, n, ch, start, ident, prev, next, sub;
-		if(sugar.not) { ^code };
+		if(sugar.not and: { inlineObjects.not }) { ^code };
 		n = code.size;
 		out = String.new(n);
 		while { i < n } {
@@ -146,7 +158,7 @@ PT {
 				next = if(i < n) { code[i] } { $  };
 				sub = ident;
 				if((prev != $~) and: { prev != $. } and: { next != $: }) {
-					sub = this.prSubstitute(ident);
+					sub = this.prSubstitute(ident, inlineObjects);
 				};
 				out = out ++ sub;
 			}
@@ -155,9 +167,16 @@ PT {
 		^out
 	}
 
-	*prSubstitute { |ident|
-		var midi;
-		if(registry.includesKey(ident.asSymbol)) { ^"~" ++ ident };
+	*prSubstitute { |ident, inlineObjects = false|
+		var midi, bound;
+		if(registry.includesKey(ident.asSymbol)) {
+			if(inlineObjects) {
+				bound = registry[ident.asSymbol].asPTValue;
+				// only values can be written out; an object has to stay a reference
+				if(bound.isKindOf(PTObject).not) { ^bound.asCompileString };
+			};
+			^"~" ++ ident
+		};
 		midi = this.prParsePitch(ident);
 		if(midi.notNil) { ^midi.asString };
 		// single-character p and f are far too common as variable names
@@ -220,6 +239,32 @@ PT {
 			^Pseq(x, inf).asStream
 		};
 		^Pseq([x], inf).asStream
+	}
+
+	// Anything that can supply values, as a Pattern rather than a Stream. A Pbind
+	// needs patterns, since Pdef re-embeds them every cycle; a Stream would be
+	// used up. A bare constant is left alone, which a Pbind accepts as it is.
+	*asPattern { |x|
+		if(x.isNil) { ^nil };
+		if(x.isKindOf(PTObject)) { x = x.asPTValue };
+		if(x.isKindOf(Pattern)) { ^x };
+		if(x.isKindOf(Stream)) { ^Pfunc({ x.next }) };
+		if(x.isKindOf(Function)) { ^Pfunc(x) };
+		if(x.isKindOf(SequenceableCollection) and: { x.isString.not }) {
+			if(x.isEmpty) { ^nil };
+			^Pseq(x, inf)
+		};
+		^x
+	}
+
+	// As above, with a conversion applied. A Pattern gets a Pcollect; a bare
+	// constant is converted once, here and now, since a Symbol or a Number does
+	// not understand collect.
+	*asPatternMapped { |x, func|
+		var pattern = this.asPattern(x);
+		if(pattern.isNil) { ^nil };
+		if(pattern.isKindOf(Pattern)) { ^pattern.collect(func) };
+		^func.value(pattern)
 	}
 
 	// Draw values out of anything. n is required for open-ended sources.
@@ -462,6 +507,9 @@ PT {
 
 	*browse { ^PTBrowser.new }
 	*edit { |name| ^this.at(name).edit }
+
+	*midiOut { ^midiOut }
+	*midiOut_ { |device| midiOut = device }
 
 	*save { |path, names| ^PTArchive.save(path, names) }
 	*load { |path| ^PTArchive.load(path) }

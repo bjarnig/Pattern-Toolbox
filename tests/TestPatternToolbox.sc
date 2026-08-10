@@ -859,6 +859,150 @@ TestPatternToolbox : UnitTest {
 		this.assertEquals(lengths, [3, 6, 9], "each pass is one step of the controller");
 	}
 
+	// ------------------------------------------------------------- the live layer
+
+	test_bindIsRulesOnly {
+		var bind = PTBind(\live, (clock: "150", pitch: "60")).make;
+		this.assert(bind.pattern.isKindOf(Pbind), "a bind realizes to a pattern");
+		this.assertEquals(bind.length, 0, "it has no events");
+		this.assertEquals(bind.asEvents, nil, "and is not a section");
+	}
+
+	test_bindCapture {
+		var bind, capture;
+		PTStockpile.specify(\cmajor, "c4 e4 g4");
+		bind = PTBind(\live, (clock: "200", rhythm: "1 2",
+			pitch: "Prand(cmajor, inf)", velocity: "90")).make;
+		capture = bind.capture(\kept, 20);
+		this.assertEquals(capture.length, 20, "captured the requested number of events");
+		this.assert(capture.notes.every { |e| [60, 64, 67].includes(e[\midinote]) },
+			"with the bind's pitch material");
+		this.assertArrayFloatEquals(capture.extract(\rhythm).keep(4), [0.2, 0.4, 0.2, 0.4],
+			"and the bind's rhythm, cycling");
+	}
+
+	test_bindCaptureIsReproducible {
+		var capture, first;
+		PTBind(\live, (pitch: "Pwhite(40, 80)")).make;
+		capture = PT(\live).capture(\kept, 16);
+		first = capture.extract(\pitch);
+		this.assertEquals(capture.reproduce.extract(\pitch), first, "the seed replays it");
+		this.assert(capture.make.extract(\pitch) != first, "a fresh make takes a new stretch");
+	}
+
+	test_bindRests {
+		var capture;
+		PTBind(\live, (clock: "100", rhythm: "1 -1", pitch: "60")).make;
+		capture = PT(\live).capture(\kept, 8);
+		this.assertEquals(capture.numNotes, 4, "a negative rhythm is still a rest");
+		this.assertEquals(capture.asEvents[1][\type], \rest, "marked as one");
+		this.assertArrayFloatEquals(capture.extract(\rhythm).keep(2), [0.1, 0.1],
+			"and takes its own time");
+	}
+
+	test_bindExtraKeysSurviveCapture {
+		var capture;
+		PTBind(\live, (pitch: "60", extra: "(pan: Pseq([-1, 1], inf))")).make;
+		capture = PT(\live).capture(\kept, 4);
+		this.assertEquals(capture.asEvents.collect { |e| e[\pan] }, [-1, 1, -1, 1],
+			"an extra Pbind key is carried into the frozen section");
+		this.assertEquals(capture.asEvents[0][\ptRhythm], nil,
+			"but the internal bookkeeping key is not");
+	}
+
+	// ------------------------------------------------------------ source export
+
+	test_pbindSourceStandsAlone {
+		var source, exported, mine;
+		PTStockpile.specify(\cmajor, "c4 d4 e4 f4 g4");
+		PTDataSection(\s1, (clock: "150", number: "10", rhythm: "1 2",
+			pitch: "Prand(cmajor, inf)", velocity: "mf")).make;
+		source = PT(\s1).asPbindSource;
+		this.assert(source.contains("~").not,
+			"no toolbox reference is left: a referenced stockpile is written out as its values");
+		this.assert(source.contains("Pseq([1, 2], inf)"),
+			"a bare token list becomes the cycling Pseq the toolbox reads it as");
+		exported = source.interpret.asStream.nextN(10, ());
+		mine = PT(\s1).asEvents;
+		this.assertArrayFloatEquals(
+			exported.collect { |e| e[\dur] }, mine.collect { |e| e[\dur] },
+			"and the exported pattern gives the same durations");
+		this.assert(exported.every { |e| PT(\cmajor).value.includes(e[\midinote]) },
+			"from the same pitch material");
+	}
+
+	test_eventSourceIsExact {
+		var section, exported;
+		section = PTDataSection(\s1, (clock: "100", number: "6", rhythm: "1 -1",
+			pitch: "Pwhite(48, 72)")).make;
+		exported = section.asSource.interpret.asStream.all;
+		this.assertEquals(exported.collect { |e| e[\midinote] }, section.extract(\pitch),
+			"exporting the events reproduces them exactly, whatever made them");
+		this.assertEquals(exported.count { |e| e[\type] == \rest }, section.length - section.numNotes,
+			"rests included");
+	}
+
+	// -------------------------------------------------------------- midi export
+
+	test_midiVariableLengthQuantities {
+		// the worked examples from the standard MIDI file specification
+		this.assertEquals(PTMidiFile.prVariable(0), [0], "zero");
+		this.assertEquals(PTMidiFile.prVariable(127), [16r7F], "the largest single byte");
+		this.assertEquals(PTMidiFile.prVariable(128), [16r81, 16r00], "one byte over");
+		this.assertEquals(PTMidiFile.prVariable(16r2000), [16rC0, 16r00], "8192");
+		this.assertEquals(PTMidiFile.prVariable(16r3FFF), [16rFF, 16r7F], "the largest two bytes");
+		this.assertEquals(PTMidiFile.prVariable(16r4000), [16r81, 16r80, 16r00], "three bytes");
+	}
+
+	test_midiMessages {
+		var section, messages, ons, offs;
+		section = PTDataSection(\s1, (clock: "250", number: "4", rhythm: "1 -1 2 1",
+			pitch: "[[c4, e4, g4], 60, 62, 64]", velocity: "40 100", channel: "1 2")).make;
+		messages = PTMidiFile.prMessages(section.asEvents);
+		ons = messages.select { |m| (m[1][0] bitAnd: 16rF0) == 16r90 };
+		offs = messages.select { |m| (m[1][0] bitAnd: 16rF0) == 16r80 };
+		this.assertEquals(ons.size, offs.size, "every note is closed again");
+		this.assertEquals(ons.select { |m| m[0] == 0 }.collect { |m| m[1][1] }.sort, [60, 64, 67],
+			"a chord is three note ons at the same tick");
+		this.assert(ons.every { |m| m[0] != 250 },
+			"the rest at a quarter of a second leaves that tick silent");
+		this.assertEquals(ons.collect { |m| m[1][0] bitAnd: 16r0F }.as(Set).asArray.sort, [0, 1],
+			"channels are written zero based");
+		this.assert(this.prAscends(messages.collect { |m| m[0] }), "and the track is in time order");
+	}
+
+	test_midiFileHeader {
+		var path = PathName.tmp +/+ "pt-test.mid";
+		var bytes;
+		PTDataSection(\s1, (number: "4", pitch: "60")).make;
+		PT(\s1).writeMidi(path);
+		bytes = File.use(path, "rb", { |f|
+			var array = Int8Array.newClear(f.length);
+			f.read(array);
+			array
+		});
+		this.assertEquals(bytes.keep(4).collect(_.asAscii).join, "MThd", "a header chunk");
+		this.assertEquals(bytes.copyRange(14, 17).collect(_.asAscii).join, "MTrk", "and a track chunk");
+		this.assert(bytes.size > 40, "with something in it");
+		File.delete(path);
+	}
+
+	// ----------------------------------------------------------- offline render
+
+	test_scoreCarriesItsSynthDefs {
+		var plain, ours;
+		PTDataSection(\s1, (number: "6", pitch: "60")).make;
+		plain = PT(\s1).asPattern.asScore(2.0);
+		ours = PT(\s1).asScore;
+		this.assertEquals(plain.score.count { |b| b[1][0] == '/d_recv' }, 0,
+			"Pattern:asScore ships no SynthDefs of its own");
+		this.assertEquals(ours.score.count { |b| b[1][0] == '/d_recv' }, 1,
+			"so the score has to carry them, or an offline render is silent");
+		this.assertEquals(ours.score.first[0], 0.0, "sent at time zero");
+		this.assertEquals(ours.score.first[1][0], '/d_recv', "before anything else");
+		this.assert(ours.score.size > 6, "and the notes follow");
+	}
+
 	// --------------------------------------------------------- gui, pure parts
 
 	test_capabilitiesAreDeclaredNotProbed {

@@ -7,11 +7,12 @@ over SuperCollider patterns. You make an object, it gets a name, you can look at
 it, hear it, edit its rules, remake it, make a variant of it, and refer to it
 from any other object. The rules and one specific result are both kept.
 
-Status: **phase 5**. The object model, stockpiles, data sections, note structures,
+Status: **phase 6**. The object model, stockpiles, data sections, note structures,
 note sections, density sections, shapes, masks, combinations, transformers,
-filters, communities, controllers, schemes, the archive format, the browser, the
+filters, communities, controllers, schemes, a live `Pdef`-backed layer, MIDI file
+and offline render export, source export, the archive format, the browser, the
 object dialogs, the drawing editor and the piano roll all work and are covered by
-tests. A live `Pdef`-backed layer and export are next.
+tests. The extended generator library is next.
 
 ![the browser and an object dialog](doc/images/object-dialog.png)
 
@@ -273,6 +274,52 @@ PTScheme(\round, (members: "curve theme", reset: "ceiling")).make;
 PT(\round).apply;
 PT(\round).applyTimes(3);
 ```
+
+## Playing live
+
+Every other object keeps rules and one realization of them. A bind keeps only the
+rules: it has no events at all, and plays through a `Pdef` named after itself, so
+an edit lands on the next cycle rather than restarting.
+
+```supercollider
+PTBind(\live, (clock: "150", rhythm: "Prand([1, 1, 2, -1], inf)",
+	pitch: "Prand(cmajor, inf)", velocity: "Pwhite(50, 110)")).make.play;
+
+// change a slot, press make, and it changes underneath you
+PT(\live).spec.put(\pitch, "Prand(cmajor, inf) + Prand([0, 12], inf)");
+PT(\live).make;
+```
+
+Anything else a Pbind takes goes in the `extra` slot, as an Event:
+`(pan: Pwhite(-0.8, 0.8), legato: 0.4)`.
+
+A bind cannot be plotted or sliced, because there is nothing there yet. Capture it
+and you get an ordinary section:
+
+```supercollider
+PT(\live).capture(\take1, 64);
+PT(\take1).plot;
+PT(\take1).make;         // a different 64 events of the same live material
+PT(\take1).reproduce;    // the take you liked, exactly
+```
+
+## Getting out
+
+```supercollider
+PT(\sketch).asPbindSource.postln;   // the rules, as plain SuperCollider
+PT(\sketch).asSource.postln;        // the events themselves, exactly
+PT(\sketch).writeMidi("~/Desktop/sketch.mid");
+PT(\sketch).render("~/Desktop/sketch.wav");   // offline, faster than real time
+PT(\sketch).asScore;
+```
+
+Exported source stands on its own: pitch names become numbers and a referenced
+stockpile is written out as its values, so `asPbindSource.interpret.play` works
+with the toolbox uninstalled. Useful when the GUI has been doing the thinking and
+you want to see what an object actually is.
+
+MIDI out is there too, if you have a device: `PT.midiOut_(MIDIOut(0))` then
+`PT(\sketch).playMidi`.
 
 ## The browser
 

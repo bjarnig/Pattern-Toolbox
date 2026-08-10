@@ -51,7 +51,7 @@ PTSpec {
 		var src = this.at(key);
 		if(src.isNil) { Error("PTSpec: no slot named %".format(key)).throw };
 		if(src.stripWhiteSpace.isEmpty) { ^default };
-		^this.prGuard(key) { PT.eval(src) }
+		^this.prRequire(key, src, this.prGuard(key) { PT.eval(src) })
 	}
 
 	// Same, but a bare token run is read as a list.
@@ -59,7 +59,18 @@ PTSpec {
 		var src = this.at(key);
 		if(src.isNil) { Error("PTSpec: no slot named %".format(key)).throw };
 		if(src.stripWhiteSpace.isEmpty) { ^default };
-		^this.prGuard(key) { PT.evalList(src) }
+		^this.prRequire(key, src, this.prGuard(key) { PT.evalList(src) })
+	}
+
+	// A slot that will not compile comes back nil from interpret without raising,
+	// which used to leave an object made and empty with only a parse message in
+	// the log. Fail where the mistake is instead.
+	prRequire { |key, src, result|
+		if(result.isNil) {
+			Error("PT: slot '%' did not produce a value. Check its syntax:\n    %"
+				.format(key, src)).throw
+		};
+		^result
 	}
 
 	prGuard { |key, func|

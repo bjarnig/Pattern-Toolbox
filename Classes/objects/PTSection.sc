@@ -76,6 +76,22 @@ PTSection : PTObject {
 		}
 	}
 
+	// ----------------------------------------------------------------- export
+
+	writeMidi { |path, tail = 0| ^PTMidiFile.write(path, this, tail) }
+
+	asScore { |duration, tail = 1| ^PTExport.score(this, duration, tail) }
+
+	render { |path, duration| ^PTExport.render(this, path, duration) }
+
+	asSource { ^PTExport.eventSource(this) }
+
+	asPbindSource { ^PTExport.pbindSource(this) }
+
+	postSource { this.asSource.postln; ^this }
+
+	playMidi { |device| ^Pdef(name, PTExport.midiPattern(this, device)).play(PT.clock) }
+
 	// ------------------------------------------------------------------ plots
 
 	// No argument opens the piano roll, as the AC Toolbox Plot button does.

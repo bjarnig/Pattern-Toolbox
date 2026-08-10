@@ -144,9 +144,12 @@ can hand in a seed.
 
 **A live layer.** AC Toolbox sections are frozen blocks fired at MIDI.
 SuperCollider gives us `Pdef`, so a section plays through a `Pdef` named after
-itself and hot-swaps when you press Make while it is sounding. `PTBind` will be
-the purely live object: spec only, no frozen output, plays forever, with
-`capture` to freeze it into a section and `asBind` to go the other way.
+itself and hot-swaps when you press Make while it is sounding. `PTBind` is the
+purely live object: rules only, no realization at all, playing forever. It is the
+one object that breaks the spec-and-value pairing from the other side, by having
+no value worth keeping. `PTCapture` bridges back: it freezes a stretch of a bind
+into an ordinary section, and because it keeps its own rules and seed, remaking it
+takes a new stretch while `reproduce` brings back the take you liked.
 
 ## 6. Representation decisions
 
@@ -178,6 +181,28 @@ reloads like everything else.
 for every object type, so the interface stays predictable; `draw` opens the mouse
 editor and only shapes and masks answer it. The browser and the dialog show a
 draw button only when the selected object responds to it.
+
+**Exported source is standalone.** `asPbindSource` resolves pitch and dynamic
+names to numbers, writes a referenced stockpile out as its values, and turns a
+bare token list into the cycling `Pseq` the toolbox reads it as. The test does not
+check the text: it compiles the exported source and compares the events it
+produces against the section's own. Exporting something that merely looks right
+would be worse than not exporting at all.
+
+**A score has to carry its SynthDefs.** `Pattern:asScore` emits no `/d_recv` at
+all, so an offline server has nothing to instantiate and the render comes out the
+right length and completely silent. `PTExport.score` prepends one `/d_recv` per
+instrument the section names. This was isolated by rendering four variants and
+measuring peak amplitude, after a first wrong guess that the problem was message
+ordering.
+
+**MIDI files are written by hand, not by a quark.** `SimpleMIDIFile` exists but
+comes from wslib, and a toolbox meant for students should install as one thing.
+The writer is format 0 with 1000 ticks to the quarter and a quarter of 1000000
+microseconds, so one tick is exactly one millisecond and there is no tick
+arithmetic to get wrong. Verified by parsing the bytes back outside
+SuperCollider: chords land as simultaneous note ons, rests leave their tick empty,
+channels are written zero based, and the declared track length matches the file.
 
 **Capabilities are declared, not probed.** The dialogs and the browser ask
 `canDraw`, `canApply` and `canReset` rather than `respondsTo`. Probing looked
@@ -275,7 +300,8 @@ PTObject                     name, spec, value, seed; make / specify / variant
 ├── PTController             a stream with state, history and reset       [done]
 ├── PTScheme                 an ordered remake list                        [done]
 ├── PTCommunity              sections grouped in name only                   [done]
-├── PTBind                   live, Pdef-backed; no frozen output
+├── PTBind                   live, Pdef-backed; no frozen output            [done]
+│   └── PTCapture            a section frozen out of a bind                 [done]
 └── PTCode                   a saved sclang snippet
 ```
 
@@ -387,8 +413,8 @@ tutorial asks you to make section2 out of section1.
 | 3 | Combinations, transformers, filters, `PTCommunity` | Tutorials 5, 7, 23, 25 | **done** |
 | 4 | `PTController`, `PTScheme` | Tutorial 13, the level higher | **done** |
 | 5 | `PTNoteStructure`, note and density sections | Tutorials 8, 9, 10 | **done** |
-| 6 | `PTBind`, MIDI in and out, NRT and MIDI file export, Pbind source export | new ground | next |
-| 7 | Generator library: Koenig selection principles, chaos, 1/f, transition tables, mutations | Tutorial 24 and the Annotated Index | |
+| 6 | `PTBind`, `PTCapture`, MIDI file and NRT export, source export, MIDI out | new ground | **done** |
+| 7 | Generator library: Koenig selection principles, chaos, 1/f, transition tables, mutations; MIDI input; XY density sections | Tutorial 24 and the Annotated Index | next |
 
 ## 12. Open questions
 
