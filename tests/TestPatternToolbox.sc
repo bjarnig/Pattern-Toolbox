@@ -213,6 +213,14 @@ TestPatternToolbox : UnitTest {
 			"the rounding unit is honoured");
 	}
 
+	test_conversionBoundsAcceptPitchNames {
+		var shape = PTShape.specify(\line, "0 100");
+		this.assertEquals(shape.convert(3, \c3, \c5), shape.convert(3, 48, 72),
+			"a pitch name works as a bound, which is what a reader types");
+		this.assertEquals(PTMask.specify(\m, "50 50", "50 50").convert(2, \c4, \c5),
+			[66, 66], "for masks too");
+	}
+
 	test_shapeContourIsScaleFree {
 		var a = PTShape.specify(\a, "0 5 10");
 		var b = PTShape.specify(\b, "100 150 200");

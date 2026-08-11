@@ -36,9 +36,17 @@ PTCurve {
 		^values
 	}
 
+	// A bound may be written as a pitch name, since that is what a reader types
+	// when converting into a pitch range.
+	*bound { |x|
+		if(x.isKindOf(Symbol) or: { x.isKindOf(String) }) { ^PT.midinote(x) };
+		^x
+	}
+
 	// One line: n values following the contour, mapped into lo..hi.
 	*convertShape { |points, n, lo = 0, hi = 1, round|
 		var sampled = this.sample(points, n);
+		lo = this.bound(lo); hi = this.bound(hi);
 		^this.roundToRange(this.scale(sampled, lo, hi), lo, hi, round)
 	}
 
@@ -55,6 +63,7 @@ PTCurve {
 		var max = max(upper.maxItem, lower.maxItem);
 		var stream = PT.asStream(positions ?? { Pwhite(0.0, 100.0) });
 		var values;
+		lo = this.bound(lo); hi = this.bound(hi);
 		upper = this.scale(upper, lo, hi, min, max);
 		lower = this.scale(lower, lo, hi, min, max);
 		values = n.collect { |i|

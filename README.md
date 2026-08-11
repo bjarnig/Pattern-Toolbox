@@ -396,6 +396,10 @@ TestPatternToolbox.run;
 
 ## Documentation
 
+`doc/TUTORIAL.md` is the tutorial: sixteen short chapters in the style of Paul
+Berg's original, from data sections through masks and controllers to playing live
+and exporting. Every code block in it has been run.
+
 `ARCHITECTURE.md` explains the design, what was taken from the AC Toolbox, what
 was changed and why, and the phase plan.
 

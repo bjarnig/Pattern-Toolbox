@@ -80,6 +80,7 @@ PTMask : PTObject {
 		var lower = PTCurve.sample(this.bottom, n);
 		var min = min(upper.minItem, lower.minItem);
 		var max = max(upper.maxItem, lower.maxItem);
+		lo = PTCurve.bound(lo); hi = PTCurve.bound(hi);
 		upper = PTCurve.scale(upper, lo, hi, min, max);
 		lower = PTCurve.scale(lower, lo, hi, min, max);
 		^PTCurve.roundToRange(n.collect { |i| (upper[i] - lower[i]).abs }, lo, hi)
