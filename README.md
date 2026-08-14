@@ -400,6 +400,10 @@ TestPatternToolbox.run;
 Berg's original, from data sections through masks and controllers to playing live
 and exporting. Every code block in it has been run.
 
+`doc/tutorial.html` is the same thing as a single self-contained page, built from
+the markdown with `python3 doc/build-tutorial.py`. Edit the markdown, never the
+HTML.
+
 `ARCHITECTURE.md` explains the design, what was taken from the AC Toolbox, what
 was changed and why, and the phase plan.
 

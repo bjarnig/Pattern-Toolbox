@@ -1,0 +1,1646 @@
+<meta charset="utf-8">
+<title>Using the Pattern Toolbox</title>
+<style>
+:root {
+  --ground: #ffffff;
+  --ink: #16181d;
+  --ink-soft: #5c626e;
+  --ink-faint: #8b919c;
+  --rule: #e4e6ea;
+  --panel: #f7f8fa;
+  --accent: #1a4fd6;
+
+  --sans: "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
+  --serif: Charter, "Bitstream Charter", "Iowan Old Style", Palatino,
+           "Palatino Linotype", Georgia, serif;
+  --mono: "PT Mono", Menlo, "DejaVu Sans Mono", Consolas, monospace;
+
+  --measure: 66ch;
+  --rail: 3.5rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: calc(var(--measure) + var(--rail) + 3rem);
+  margin: 0 auto;
+  padding: 5rem 1.5rem 8rem calc(1.5rem + var(--rail));
+}
+
+/* ------------------------------------------------------------------ headings */
+
+h1, h2, h3, h4 {
+  font-family: var(--sans);
+  font-weight: 600;
+  text-wrap: balance;
+  letter-spacing: -0.011em;
+  color: var(--ink);
+}
+
+h1 {
+  font-size: 2.6rem;
+  line-height: 1.1;
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.028em;
+}
+
+h1 + h2 {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.25rem;
+  color: var(--ink-soft);
+  border: 0;
+  padding: 0;
+  margin: 0 0 4rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin: 4.5rem 0 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  position: relative;
+}
+
+h2 .num {
+  position: absolute;
+  left: calc(var(--rail) * -1);
+  top: 1.5rem;
+  width: calc(var(--rail) - 1rem);
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.75;
+  color: var(--accent);
+}
+
+h3 { font-size: 1.075rem; margin: 2.75rem 0 0.85rem; }
+
+/* ---------------------------------------------------------------------- text */
+
+p, ul, ol, dl { margin: 0 0 1.25rem; max-width: var(--measure); }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+strong { font-weight: 600; }
+
+/* the example-file note under each chapter heading */
+h2 + p > em:only-child {
+  font-family: var(--sans);
+  font-style: normal;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-faint);
+}
+
+ul, ol { padding-left: 1.15rem; }
+li { margin-bottom: 0.35rem; }
+li::marker { color: var(--ink-faint); }
+
+/* Berg's reader actions: do this, now */
+li.action, p.action {
+  list-style: none;
+  position: relative;
+  padding-left: 1.4rem;
+  color: var(--ink-soft);
+}
+li.action { margin-left: -1.15rem; }
+li.action::before, p.action::before {
+  /* a CSS unicode escape, not the character: the ASCII pass over the finished
+     page would turn a literal bullet into an HTML entity, which CSS cannot read */
+  content: "\2022";
+  position: absolute;
+  left: 0.35rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+blockquote {
+  margin: 1.25rem 0;
+  padding-left: 1rem;
+  border-left: 2px solid var(--rule);
+  color: var(--ink-soft);
+}
+blockquote p { margin: 0; }
+
+hr { display: none; }
+
+/* ---------------------------------------------------------------------- code */
+
+code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  color: var(--ink);
+}
+
+pre {
+  margin: 1.5rem 0;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  font-size: 0.82rem;
+  line-height: 1.62;
+  tab-size: 4;
+}
+pre code { font-size: inherit; }
+
+/* code you run */
+pre.code {
+  background: var(--panel);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 3px 3px 0;
+}
+pre.code .c { color: var(--ink-faint); }
+pre.code .s { color: var(--accent); }
+
+/* the contents of a dialog, as the AC Toolbox tutorial shows them */
+pre.listing {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--ink-soft);
+}
+
+/* -------------------------------------------------------------------- tables */
+
+.scroll { overflow-x: auto; margin: 1.5rem 0; max-width: var(--measure); }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: var(--sans);
+  font-size: 0.87rem;
+  font-variant-numeric: tabular-nums;
+}
+
+th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--ink);
+  padding: 0 1.25rem 0.5rem 0;
+}
+
+td {
+  vertical-align: top;
+  padding: 0.55rem 1.25rem 0.55rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+td:last-child, th:last-child { padding-right: 0; }
+td code { color: var(--ink); }
+
+/* ------------------------------------------------------------------ summary */
+
+dl.summary {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 0.4rem 1.25rem;
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.92rem;
+}
+dl.summary dt {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding-top: 0.3em;
+}
+dl.summary dd {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+}
+
+/* ---------------------------------------------------------------- contents */
+
+#contents + ul {
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  list-style: none;
+  padding: 0;
+  columns: 2;
+  column-gap: 2.5rem;
+}
+#contents + ul li { margin-bottom: 0.5rem; break-inside: avoid; }
+#contents + ul a { text-decoration: none; color: var(--ink); }
+#contents + ul a:hover { color: var(--accent); text-decoration: underline; }
+
+/* ------------------------------------------------------------------ closing */
+
+.page > p:last-child {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+}
+
+@media (max-width: 700px) {
+  :root { --rail: 0rem; }
+  body { font-size: 16px; }
+  .page { padding: 3rem 1.25rem 5rem; }
+  h1 { font-size: 2rem; }
+  h2 .num { position: static; display: block; text-align: left; width: auto; }
+  #contents + ul { columns: 1; }
+  dl.summary { grid-template-columns: 1fr; gap: 0.15rem; }
+  dl.summary dd { margin-bottom: 0.6rem; }
+}
+
+@media print {
+  .page { padding: 0; max-width: none; }
+  pre, .scroll { break-inside: avoid; }
+  h2 { break-after: avoid; }
+}
+</style>
+
+<article class="page">
+<h1 id="using-the-pattern-toolbox">Using the Pattern Toolbox</h1>
+<h2 id="a-tutorial">A tutorial</h2>
+<hr>
+<h2 id="contents">Contents</h2>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#basics">Basics</a></li>
+<li><a href="#tutorial-1-making-data-sections">Tutorial 1: Making data sections</a></li>
+<li><a href="#tutorial-2-combining-sections">Tutorial 2: Combining sections</a></li>
+<li><a href="#tutorial-3-using-stockpiles-making-choices">Tutorial 3: Using stockpiles, making choices</a></li>
+<li><a href="#tutorial-4-shapes">Tutorial 4: Shapes</a></li>
+<li><a href="#tutorial-5-masks">Tutorial 5: Masks</a></li>
+<li><a href="#tutorial-6-chords-rests-and-transpositions">Tutorial 6: Chords, rests, and transpositions</a></li>
+<li><a href="#tutorial-7-making-variants-editing-objects">Tutorial 7: Making variants, editing objects</a></li>
+<li><a href="#tutorial-8-transforming-objects">Tutorial 8: Transforming objects</a></li>
+<li><a href="#tutorial-9-more-opportunities-to-filter">Tutorial 9: More opportunities to filter</a></li>
+<li><a href="#tutorial-10-filling-time-density-sections">Tutorial 10: Filling time: density sections</a></li>
+<li><a href="#tutorial-11-note-structures">Tutorial 11: Note structures</a></li>
+<li><a href="#tutorial-12-making-note-sections">Tutorial 12: Making note sections</a></li>
+<li><a href="#tutorial-13-a-level-higher-controllers-and-schemes">Tutorial 13: A level higher: controllers and schemes</a></li>
+<li><a href="#tutorial-14-communities">Tutorial 14: Communities</a></li>
+<li><a href="#tutorial-15-playing-live">Tutorial 15: Playing live</a></li>
+<li><a href="#tutorial-16-getting-out">Tutorial 16: Getting out</a></li>
+<li><a href="#index-of-objects">Index of objects</a></li>
+<li><a href="#index-of-tools">Index of tools</a></li>
+</ul>
+<hr>
+<h2 id="introduction">Introduction</h2>
+<p>Computer-aided algorithmic composition is the broad area where computer tools are
+used to assist in the composition of musical material. The material could be a
+handful of values useful for one parameter. It could be a framework of time and
+pitch points to serve as a basis for realizing a composition. It could be a
+complete description of a composer's model for a particular composition.</p>
+<p>The Pattern Toolbox is a collection of tools for those purposes, built on
+SuperCollider's patterns. Several models for defining musical events are
+included. They are used by defining objects such as sections, shapes, masks, or
+note structures.</p>
+<p>An object has a name, a set of rules, and one specific result of applying those
+rules. Both are kept. This allows material to be specified in general terms while
+a particular instance of it is held on to. Composition sometimes requires both
+good design and good luck.</p>
+<p>The design of the Toolbox follows Paul Berg's <strong>AC Toolbox</strong> closely. What is new
+here belongs to SuperCollider: objects are sounded by SynthDefs rather than by
+Midi alone, every result can be reproduced exactly from the seed that made it, and
+material can be played live and altered while it sounds.</p>
+<h3 id="about-this-documentation">About this documentation</h3>
+<p>Each tutorial is accompanied by a file in the <code>examples</code> folder containing the
+objects discussed in the text. Requests to perform an action are preceded by a
+<code>&#8226;</code> symbol:</p>
+<blockquote>
+<p class="action">Evaluate the block and listen to the section.</p>
+</blockquote>
+<p>This documentation is not a general tutorial on algorithmic composition.</p>
+<hr>
+<h2 id="basics">Basics</h2>
+<h3 id="installing">Installing</h3>
+<p>Place the <code>Pattern-Toolbox</code> folder in the SuperCollider <code>Extensions</code> folder and
+recompile the class library. Nothing else is required; there are no dependencies.</p>
+<h3 id="objects">Objects</h3>
+<p>Various types of object can be defined. They include sections, stockpiles, shapes,
+masks, note structures, combinations, communities, controllers, schemes, and
+binds. These objects are used to define musical material.</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>object</th>
+<th>what it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>section</td>
+<td>one or more notes: a note, a phrase, a voice, a movement, a composition</td>
+</tr>
+<tr>
+<td>stockpile</td>
+<td>a collection of values</td>
+</tr>
+<tr>
+<td>shape</td>
+<td>a curve: some motion over time</td>
+</tr>
+<tr>
+<td>mask</td>
+<td>two curves: a field that changes over time</td>
+</tr>
+<tr>
+<td>note structure</td>
+<td>notes whose pitch and rhythm belong together, nested in sequence and in parallel</td>
+</tr>
+<tr>
+<td>community</td>
+<td>a group of sections joined in name only</td>
+</tr>
+<tr>
+<td>controller</td>
+<td>a source of values that keeps its state outside any section</td>
+</tr>
+<tr>
+<td>scheme</td>
+<td>a script for remaking several objects in a fixed order</td>
+</tr>
+<tr>
+<td>bind</td>
+<td>rules with no result: material that plays live and can be changed while sounding</td>
+</tr>
+</tbody>
+</table></div>
+<p>Almost any group of time and pitch points is called a section. This avoids having
+to make judgements about the material being produced before it exists.</p>
+<h3 id="making-an-object">Making an object</h3>
+<p>Every object is made in the same way: a name, and a set of slots filled with text.</p>
+<pre class="code"><code>PTDataSection(\section1, (
+    clock:  <span class="s">&quot;100&quot;</span>,
+    number: <span class="s">&quot;60&quot;</span>,
+    rhythm: <span class="s">&quot;1&quot;</span>,
+    pitch:  <span class="s">&quot;Pseries(c2, 1)&quot;</span>
+)).make;
+</code></pre>
+<p><code>PT(\section1)</code> finds it again afterwards. <code>PT.browse</code> opens the object list, from
+which any object can be inspected, played, plotted, remade and edited.</p>
+<h3 id="input">Input</h3>
+<p>Slots are filled with text. The same kinds of thing are accepted everywhere.</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>you write</th>
+<th>you get</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>60</code></td>
+<td>a number</td>
+</tr>
+<tr>
+<td><code>c4</code></td>
+<td>a pitch name. Middle C is <code>c4</code></td>
+</tr>
+<tr>
+<td><code>cs4</code> <code>c#4</code> <code>ef4</code> <code>bf-1</code></td>
+<td>sharps, flats, negative octaves</td>
+</tr>
+<tr>
+<td><code>mf</code> <code>ff</code> <code>ppp</code></td>
+<td>a dynamic, as a velocity</td>
+</tr>
+<tr>
+<td><code>1 2 3</code> or <code>c4 e4 g4</code></td>
+<td>a list, which cycles</td>
+</tr>
+<tr>
+<td><code>[[c4, e4, g4]]</code></td>
+<td>a chord</td>
+</tr>
+<tr>
+<td><code>Pwhite(60, 72)</code></td>
+<td>any SuperCollider pattern</td>
+</tr>
+<tr>
+<td><code>cmajor</code></td>
+<td>any object already made, by name</td>
+</tr>
+<tr>
+<td><code>-1</code></td>
+<td>in a rhythm slot: a rest of that length</td>
+</tr>
+<tr>
+<td><code>PT.bpm(160)</code></td>
+<td>in a clock slot</td>
+</tr>
+<tr>
+<td><code>PT.untilTime(10)</code></td>
+<td>in a number slot: fill ten seconds</td>
+</tr>
+</tbody>
+</table></div>
+<p>Pitches are Midi note numbers or symbols containing pitch class and octave. The
+octave of middle C is 4, and can be changed with <code>PT.middleCOctave</code>.</p>
+<p>Bare names are rewritten before the text is compiled: an object name becomes an
+environment variable, a pitch name becomes a note number, a dynamic becomes a
+velocity. To write plain SuperCollider instead, set <code>PT.sugar = false</code> and use
+<code>~cmajor</code> and <code>60</code>.</p>
+<h3 id="generators">Generators</h3>
+<p>A generator returns the next value in some series each time it is used. In
+SuperCollider a generator is a <strong>pattern</strong>. <code>Pwhite(1, 100)</code> produces a value
+between 1 and 100; <code>Prand([1, 2, 3], inf)</code> chooses among three values;
+<code>Pseries(60, 1)</code> counts upwards from 60.</p>
+<p>Patterns whose name ends in a bandwidth produce values between two limits.
+Patterns that take a list choose from an available supply of values.</p>
+<p>If the input to a pattern is only integer values, an integer is produced.
+Otherwise a real number is returned. <code>Pwhite(60, 72)</code> gives whole semitones,
+<code>Pwhite(60.0, 72)</code> gives microtones.</p>
+<h3 id="tools-and-transformers">Tools and transformers</h3>
+<p>Tools are functions to do things that may be useful. <code>PT.convert</code> interprets a
+shape or a mask in a range; <code>PT.readFrom</code> reads a collection in the order a curve
+describes; <code>PT.attacks</code> builds a list of attack points. Transformers modify an
+object or part of one: <code>PT.transpose</code>, <code>PT.stretch</code>, <code>PT.limit</code>.</p>
+<p>When a tool is evaluated it produces a result. When a pattern is evaluated it
+produces something that still has to be applied before there is a usable result.</p>
+<h3 id="errors">Errors</h3>
+<p>When the Toolbox catches an error, a message is printed naming the slot that
+caused it. These include not filling a slot, referring to an object that has not
+been made, and text that will not compile.</p>
+<p>To stop everything that is sounding, evaluate <code>PT.stopAll</code>.</p>
+<hr>
+<h2 id="tutorial-1-making-data-sections"><span class="num">1</span>Making data sections</h2>
+<p><em>Example file: <code>examples/01-sections-and-stockpiles.scd</code></em></p>
+<p>A section is a collection of one or more notes. A <strong>data section</strong> is a section
+where the value of each parameter is specified separately. Rhythm, pitch and
+velocity are calculated without necessarily referring to each other.</p>
+<p>A clock unit is specified. This is the basic beat of a section, expressed in
+milliseconds. Rhythm is expressed as a multiple of this clock unit: one times the
+beat, two times the beat, 3.5 times the beat.</p>
+<pre class="listing"><code>Name            section1
+Clock unit      100
+Number          60
+Rhythm          1
+Pitch           Pseries(c2, 1)
+Velocity        mf
+Channel         1
+</code></pre>
+<pre class="code"><code>PTDataSection(\section1, (
+    clock:    <span class="s">&quot;100&quot;</span>,
+    number:   <span class="s">&quot;60&quot;</span>,
+    rhythm:   <span class="s">&quot;1&quot;</span>,
+    pitch:    <span class="s">&quot;Pseries(c2, 1)&quot;</span>,
+    velocity: <span class="s">&quot;mf&quot;</span>,
+    channel:  <span class="s">&quot;1&quot;</span>
+)).make;
+</code></pre>
+<p>The clock unit is 100 milliseconds. Sixty notes will be made. Each note lasts one
+times 100 milliseconds. Pitch starts at c2 and adds one to each successive note.
+Instead of <code>c2</code>, the Midi note number 36 could have been written.</p>
+<ul>
+<li class="action">Play the section with <code>PT(\section1).play</code>.</li>
+<li class="action">Plot the piano roll representation with <code>PT(\section1).plot</code>. High pitches are
+  at the top and low pitches at the bottom.</li>
+<li class="action">Plot one parameter alone with <code>PT(\section1).plot(\rhythm)</code>.</li>
+<li class="action">Print a plain text score with <code>PT(\section1).textScore(20)</code>.</li>
+</ul>
+<h3 id="generating-several-parameters">Generating several parameters</h3>
+<p>It is possible to use a pattern for several parameters at once.</p>
+<pre class="listing"><code>Name            section6
+Clock unit      100
+Number          200
+Rhythm          Pbrown(0.1, 5, 0.5)
+Pitch           Pbrown(c2, c6, 5)
+Velocity        Pbrown(pp, ff, 5)
+</code></pre>
+<pre class="code"><code>PTDataSection(\section6, (
+    clock:    <span class="s">&quot;100&quot;</span>,
+    number:   <span class="s">&quot;200&quot;</span>,
+    rhythm:   <span class="s">&quot;Pbrown(0.1, 5, 0.5)&quot;</span>,
+    pitch:    <span class="s">&quot;Pbrown(c2, c6, 5)&quot;</span>,
+    velocity: <span class="s">&quot;Pbrown(pp, ff, 5)&quot;</span>
+)).make;
+</code></pre>
+<p><code>Pbrown</code> takes a lower limit, an upper limit and a maximum step. Each value is a
+step away from the one before it, and the limits are respected.</p>
+<h3 id="channels-can-also-be-changed">Channels can also be changed</h3>
+<p>The channel number does not have to be constant. If the specification is a list,
+the first note gets the first channel number, the second note the second, and so
+on, cycling back to the beginning at the end of the list. If it is a pattern, the
+pattern is applied for each note.</p>
+<h3 id="making-notes-until-some-amount-of-time-has-been-filled">Making notes until some amount of time has been filled</h3>
+<p>Instead of a number of notes, the number slot can be given
+<code>PT.untilTime(10)</code>. Notes will be made until ten seconds have been filled.</p>
+<pre class="code"><code>PTDataSection(\section8, (
+    clock:  <span class="s">&quot;100&quot;</span>,
+    number: <span class="s">&quot;PT.untilTime(10)&quot;</span>,
+    rhythm: <span class="s">&quot;Pwhite(1.0, 2)&quot;</span>,
+    pitch:  <span class="s">&quot;Pwhite(c3, c5)&quot;</span>
+)).make;
+</code></pre>
+<ul>
+<li class="action">Make section8 and notice how many notes were actually produced with
+  <code>PT(\section8).length</code>.</li>
+</ul>
+<h3 id="rests">Rests</h3>
+<p>Rests are negative numbers. In a data section, rhythms are multiples of the clock
+unit, and so are rests. The absolute value is the length of the rest.</p>
+<p>A rest is not inserted between notes. A rest causes a note that is produced not to
+be heard, and it counts as one of the number requested.</p>
+<pre class="code"><code>PTDataSection(\section2, (
+    clock:  <span class="s">&quot;150&quot;</span>,
+    number: <span class="s">&quot;50&quot;</span>,
+    rhythm: <span class="s">&quot;Prand([1, -1], inf)&quot;</span>,
+    pitch:  <span class="s">&quot;c4 d4 e4 f4&quot;</span>
+)).make;
+</code></pre>
+<p><code>PT(\section2).length</code> counts every event, <code>PT(\section2).numNotes</code> counts only
+the notes that sound.</p>
+<h3 id="adding-comments">Adding comments</h3>
+<p>A comment can be added to any object and is saved with it.</p>
+<pre class="code"><code>PT(\section2).comment_(<span class="s">&quot;half of these are rests&quot;</span>);
+</code></pre>
+<h3 id="saving">Saving</h3>
+<p><code>PT.save("~/Desktop/sketch.ptx")</code> writes every object to a file, and
+<code>PT.load</code> reads one back. The file is plain SuperCollider source: readable,
+comparable, and small. Because the random seed of each result is written out with
+its rules, loading a file brings back the exact material rather than merely the
+means of making it.</p>
+<h3 id="summary">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>data section</dd><dt>Methods</dt><dd>make, play, stop, plot, textScore, length, numNotes, comment</dd><dt>Patterns</dt><dd>Pseries, Pwhite, Pbrown, Prand</dd><dt>Tools</dt><dd>PT.untilTime, PT.bpm, PT.save, PT.load, PT.browse</dd><dt>Miscellaneous</dt><dd>rests, comments, channels</dd></dl>
+<hr>
+<h2 id="tutorial-2-combining-sections"><span class="num">2</span>Combining sections</h2>
+<p><em>Example file: <code>examples/04-combining-and-transforming.scd</code></em></p>
+<p>Sections can be combined in three ways. In each, the sections are named in one
+slot, and a number among the names says something about time.</p>
+<p>Two sections to work with:</p>
+<pre class="code"><code>PTDataSection(\bass, (
+    clock: <span class="s">&quot;200&quot;</span>, number: <span class="s">&quot;16&quot;</span>, rhythm: <span class="s">&quot;2&quot;</span>,
+    pitch: <span class="s">&quot;Pwhite(c1, c3)&quot;</span>, velocity: <span class="s">&quot;70&quot;</span>
+)).make;
+
+PTDataSection(\lead, (
+    clock: <span class="s">&quot;200&quot;</span>, number: <span class="s">&quot;32&quot;</span>, rhythm: <span class="s">&quot;1&quot;</span>,
+    pitch: <span class="s">&quot;Pwhite(c4, c6)&quot;</span>, velocity: <span class="s">&quot;Pwhite(60, 110)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="in-sequence">In sequence</h3>
+<pre class="code"><code>PTSequence(\pair, (sections: <span class="s">&quot;bass lead&quot;</span>)).make;
+</code></pre>
+<p>A number between two names is a delay in seconds between them.</p>
+<pre class="code"><code>PTSequence(\spaced, (sections: <span class="s">&quot;bass 2 lead&quot;</span>)).make;
+</code></pre>
+<h3 id="in-parallel">In parallel</h3>
+<pre class="code"><code>PTParallel(\duo, (sections: <span class="s">&quot;bass lead&quot;</span>)).make;
+</code></pre>
+<p>A number before a name is that voice's offset in seconds from the beginning of the
+whole combination.</p>
+<pre class="code"><code>PTParallel(\stagger, (sections: <span class="s">&quot;bass 0.4 lead&quot;</span>)).make;
+</code></pre>
+<h3 id="at-given-times">At given times</h3>
+<pre class="code"><code>PTTimed(\entries, (sections: <span class="s">&quot;bass lead&quot;</span>, times: <span class="s">&quot;0 1.5&quot;</span>)).make;
+</code></pre>
+<p>Start times are counted from the beginning of the combination. They are not times
+between objects.</p>
+<p>A combination is a section like any other, so combinations can be combined.</p>
+<pre class="code"><code>PTParallel(\canon, (sections: <span class="s">&quot;pair 1 pair 2 pair&quot;</span>)).make;
+</code></pre>
+<ul>
+<li class="action">Plot a parallel combination and notice that the voices overlap.</li>
+</ul>
+<h3 id="summary_1">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>sequential section, parallel section, timed section</dd><dt>Miscellaneous</dt><dd>combinations nest</dd></dl>
+<hr>
+<h2 id="tutorial-3-using-stockpiles-making-choices"><span class="num">3</span>Using stockpiles, making choices</h2>
+<p><em>Example file: <code>examples/01-sections-and-stockpiles.scd</code></em></p>
+<p>Several patterns choose from a collection of values. That collection could be a
+list. If frequent choices are made from the same collection, it is more convenient
+to specify the collection separately and give it a name. Such a collection is
+called a <strong>stockpile</strong>.</p>
+<p>The idea behind a stockpile is that a composer may wish to gather or prepare
+material before specifying its use or organization.</p>
+<h3 id="specifying-a-stockpile">Specifying a stockpile</h3>
+<p>Values are entered one after another, without brackets or commas.</p>
+<pre class="listing"><code>Name            cmajor
+Source          c4 d4 e4 f4 g4 a4 b4
+</code></pre>
+<pre class="code"><code>PTStockpile(\cmajor, (source: <span class="s">&quot;c4 d4 e4 f4 g4 a4 b4&quot;</span>)).make;
+</code></pre>
+<p>Once made, the stockpile can be used as a parameter of a data section, or as the
+supply for a pattern that chooses.</p>
+<pre class="code"><code>PTDataSection(\section5, (
+    clock:  <span class="s">&quot;150&quot;</span>,
+    number: <span class="s">&quot;100&quot;</span>,
+    rhythm: <span class="s">&quot;Prand([1, 2, 3], inf)&quot;</span>,
+    pitch:  <span class="s">&quot;Prand(cmajor, inf)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="generating-a-stockpile">Generating a stockpile</h3>
+<p>A stockpile can be produced with a pattern, applied a given number of times.</p>
+<pre class="listing"><code>Name            row
+Source          Pshuf((60..71), 1)
+Number          12
+</code></pre>
+<pre class="code"><code>PTStockpile(\row, (source: <span class="s">&quot;Pshuf((60..71), 1)&quot;</span>, number: <span class="s">&quot;12&quot;</span>)).make;
+</code></pre>
+<p><code>Pshuf</code> shuffles a list once, so each of the twelve pitch classes occurs exactly
+once.</p>
+<h3 id="constructing-a-stockpile">Constructing a stockpile</h3>
+<p>Any expression producing a list may be used.</p>
+<pre class="code"><code>PTStockpile(\chromatic, (source: <span class="s">&quot;(48..72)&quot;</span>)).make;
+PTStockpile(\evens, (source: <span class="s">&quot;(48..72).select { |n| n.even }&quot;</span>)).make;
+PTStockpile(\fromSection, (source: <span class="s">&quot;PT(\\section1).extract(\\pitch)&quot;</span>)).make;
+</code></pre>
+<p>The last takes the pitches of a section that has already been made, which is a
+way of using one object as material for another.</p>
+<ul>
+<li class="action">Look at the values of a stockpile with <code>PT(\row).postValues</code>.</li>
+<li class="action">Plot them with <code>PT(\row).plot</code>.</li>
+</ul>
+<h3 id="choosing-among-stockpiles">Choosing among stockpiles</h3>
+<p>Because a stockpile is a list, ordinary pattern arithmetic applies to it. To
+transpose the values on their way out without changing the stockpile:</p>
+<pre class="code"><code>PTDataSection(\section3, (
+    number: <span class="s">&quot;50&quot;</span>,
+    rhythm: <span class="s">&quot;Prand([1, 2, 3], inf)&quot;</span>,
+    pitch:  <span class="s">&quot;Prand(cmajor, inf) + Prand([-12, 0, 12], inf)&quot;</span>
+)).make;
+</code></pre>
+<p>To choose which of several stockpiles is used, choose among the names:</p>
+<pre class="code"><code>PTDataSection(\section7, (
+    number: <span class="s">&quot;60&quot;</span>,
+    pitch:  <span class="s">&quot;Pswitch([Pn(Prand(cmajor, 25), 1), Pn(Prand(row, 25), 1)], Pseq([0, 1], inf))&quot;</span>
+)).make;
+</code></pre>
+<h3 id="summary_2">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>stockpile</dd><dt>Methods</dt><dd>postValues, plot</dd><dt>Patterns</dt><dd>Prand, Pshuf, Pswitch, Pn</dd><dt>Miscellaneous</dt><dd>a stockpile is a list, so it can be added to and chosen from</dd></dl>
+<hr>
+<h2 id="tutorial-4-shapes"><span class="num">4</span>Shapes</h2>
+<p><em>Example file: <code>examples/03-shapes-and-masks.scd</code></em></p>
+<p>A <strong>shape</strong> is a curve, reflecting some motion over time. It carries no scale of
+its own. Only its contour matters; its absolute values mean nothing until the
+shape is converted into a range.</p>
+<p>A shape can be specified as a series of evenly spaced numbers, generated with a
+pattern, or drawn with the mouse.</p>
+<h3 id="specifying-a-shape">Specifying a shape</h3>
+<pre class="listing"><code>Name            arch
+Source          0 40 80 100 80 40 0
+</code></pre>
+<pre class="code"><code>PTShape(\arch, (source: <span class="s">&quot;0 40 80 100 80 40 0&quot;</span>)).make;
+</code></pre>
+<p>These two shapes are the same shape, because only the contour counts:</p>
+<pre class="code"><code>PTShape(\arch2, (source: <span class="s">&quot;20 36 52 60 52 36 20&quot;</span>)).make;
+</code></pre>
+<h3 id="generating-a-shape">Generating a shape</h3>
+<pre class="code"><code>PTShape(\wobble, (source: <span class="s">&quot;Pbrown(0, 100, 12)&quot;</span>, number: <span class="s">&quot;40&quot;</span>)).make;
+</code></pre>
+<h3 id="drawing-a-shape">Drawing a shape</h3>
+<pre class="code"><code>PTShape.draw(\hand);
+</code></pre>
+<p>A grid appears. Drag from left to right to draw. <code>flat</code>, <code>invert</code>, <code>smooth</code> and
+<code>normalise</code> alter what is there. <code>make</code> records the drawing into the object's
+rules as a list of points, so a drawn shape is an ordinary specification and saves
+like any other.</p>
+<ul>
+<li class="action">Draw a shape and use it for pitch in a data section.</li>
+</ul>
+<h3 id="converting-a-shape">Converting a shape</h3>
+<p>Converting produces a number of values following the contour, mapped into a range.
+Integer bounds give integer results, so pitches come out as note numbers.</p>
+<pre class="code"><code>PT(\arch).convert(20, \c3, \c5);   <span class="c">// pitch names work as bounds</span>
+</code></pre>
+<p>Inside a section, <code>PT.fromNumber</code> asks how many notes are being made, so the shape
+stretches to fit rather than repeating.</p>
+<pre class="code"><code>PTDataSection(\shapeSection, (
+    clock:  <span class="s">&quot;100&quot;</span>,
+    number: <span class="s">&quot;120&quot;</span>,
+    rhythm: <span class="s">&quot;1&quot;</span>,
+    pitch:  <span class="s">&quot;arch.convert(PT.fromNumber, c3, c5)&quot;</span>
+)).make;
+</code></pre>
+<p>A shape can drive any parameter.</p>
+<pre class="code"><code>PTDataSection(\shapeRhythm, (
+    clock:    <span class="s">&quot;100&quot;</span>,
+    number:   <span class="s">&quot;80&quot;</span>,
+    rhythm:   <span class="s">&quot;arch.convert(PT.fromNumber, 0.5, 4.0)&quot;</span>,
+    pitch:    <span class="s">&quot;Pwhite(c3, c5)&quot;</span>,
+    velocity: <span class="s">&quot;wobble.convert(PT.fromNumber, 30, 110)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="using-a-shape-to-read-from-a-stockpile">Using a shape to read from a stockpile</h3>
+<p>A curve can also be read as an order over a collection. The lowest point of the
+curve reads the first element, the highest the last. The contour survives while
+the pitch content is constrained.</p>
+<pre class="code"><code>PTDataSection(\readSection, (
+    clock:  <span class="s">&quot;120&quot;</span>,
+    number: <span class="s">&quot;100&quot;</span>,
+    rhythm: <span class="s">&quot;1&quot;</span>,
+    pitch:  <span class="s">&quot;PT.readFrom(cmajor, arch, PT.fromNumber)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="summary_3">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>shape</dd><dt>Methods</dt><dd>convert, draw, plot</dd><dt>Tools</dt><dd>PT.convert, PT.readFrom, PT.fromNumber</dd></dl>
+<hr>
+<h2 id="tutorial-5-masks"><span class="num">5</span>Masks</h2>
+<p><em>Example file: <code>examples/03-shapes-and-masks.scd</code></em></p>
+<p>A <strong>mask</strong> is an abstraction represented by two lines. It is a field that changes
+over time. Events can happen in the area between the lines. This requires
+interpretation. A mask, once interpreted, can represent the tendency of certain
+events to happen.</p>
+<p>A mask is related to G. M. Koenig's concept of a tendency mask, formulated for his
+composition program Project 2 and since adapted by several composers.</p>
+<h3 id="specifying-a-mask">Specifying a mask</h3>
+<pre class="listing"><code>Name            mask1
+Top             100 90 70 100 60
+Bottom          0 20 40 30 55
+</code></pre>
+<pre class="code"><code>PTMask(\mask1, (top: <span class="s">&quot;100 90 70 100 60&quot;</span>, bottom: <span class="s">&quot;0 20 40 30 55&quot;</span>)).make;
+</code></pre>
+<h3 id="drawing-a-mask">Drawing a mask</h3>
+<pre class="code"><code>PTMask.draw(\mask2);
+</code></pre>
+<p>Choose <code>top</code> or <code>bottom</code> in the popup, then drag. The line being drawn is thicker
+than the other.</p>
+<h3 id="converting-a-mask">Converting a mask</h3>
+<p>Converting a mask picks a value between its boundaries at each point in time. The
+two lines are scaled together, so the lowest point anywhere in the mask becomes
+the lower bound and the highest becomes the upper.</p>
+<pre class="code"><code>PTDataSection(\maskSection, (
+    clock:  <span class="s">&quot;100&quot;</span>,
+    number: <span class="s">&quot;200&quot;</span>,
+    rhythm: <span class="s">&quot;1&quot;</span>,
+    pitch:  <span class="s">&quot;mask1.convert(PT.fromNumber, 48, 72)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="with-a-different-generator">With a different generator</h3>
+<p>By default the choice inside the field is uniform. Another source may be given
+instead, producing values between 0 and 100 that describe a position between the
+lower boundary and the upper. <code>PTbeta</code> with small shape parameters produces values
+near its two extremes, so the pitches follow the outline of the mask and few are
+chosen in between.</p>
+<pre class="code"><code>PTDataSection(\maskEdges, (
+    clock:  <span class="s">&quot;100&quot;</span>,
+    number: <span class="s">&quot;200&quot;</span>,
+    rhythm: <span class="s">&quot;1&quot;</span>,
+    pitch:  <span class="s">&quot;mask1.convert(PT.fromNumber, 48, 72, PTbeta(0.0, 100, 0.1, 0.1))&quot;</span>
+)).make;
+</code></pre>
+<ul>
+<li class="action">Plot both sections and compare them. The second is heard as two lines rather
+  than as a filled band.</li>
+</ul>
+<h3 id="rounding-the-values">Rounding the values</h3>
+<p>Float bounds and a rounding unit give quarter tones.</p>
+<pre class="code"><code>PT(\mask1).convert(20, 48, 72.0, nil, 0.5);
+</code></pre>
+<h3 id="masking-a-stockpile">Masking a stockpile</h3>
+<p>If the pitches should be limited to some collection, read the collection with the
+mask. The shape of the field is followed, but only the available pitches sound.</p>
+<pre class="code"><code>PTDataSection(\readMask, (
+    clock:  <span class="s">&quot;120&quot;</span>,
+    number: <span class="s">&quot;150&quot;</span>,
+    rhythm: <span class="s">&quot;1&quot;</span>,
+    pitch:  <span class="s">&quot;PT.readFrom(cmajor, mask1, PT.fromNumber)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="the-width-of-the-field">The width of the field</h3>
+<p><code>spread</code> gives how open the mask is at each point, which is useful for relating
+one parameter to another.</p>
+<pre class="code"><code>PTDataSection(\maskSpread, (
+    clock:    <span class="s">&quot;80&quot;</span>,
+    number:   <span class="s">&quot;150&quot;</span>,
+    rhythm:   <span class="s">&quot;1&quot;</span>,
+    pitch:    <span class="s">&quot;mask1.convert(PT.fromNumber, 48, 84)&quot;</span>,
+    velocity: <span class="s">&quot;mask1.spread(150, 30, 120)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="summary_4">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>mask</dd><dt>Methods</dt><dd>convert, spread, draw, plot</dd><dt>Patterns</dt><dd>PTbeta</dd><dt>Tools</dt><dd>PT.convert, PT.readFrom</dd></dl>
+<hr>
+<h2 id="tutorial-6-chords-rests-and-transpositions"><span class="num">6</span>Chords, rests, and transpositions</h2>
+<p><em>Example file: <code>examples/04-combining-and-transforming.scd</code></em></p>
+<h3 id="chords">Chords</h3>
+<p>A flat list of pitches is a sequence of notes. A nested list is a chord.</p>
+<pre class="code"><code>PTDataSection(\section3b, (
+    clock:  <span class="s">&quot;150&quot;</span>,
+    number: <span class="s">&quot;50&quot;</span>,
+    rhythm: <span class="s">&quot;Prand([1, -1], inf)&quot;</span>,
+    pitch:  <span class="s">&quot;[[c4, e4, g4], [c4, d4, e4, f4], [d4, g4, b4]]&quot;</span>
+)).make;
+</code></pre>
+<p>That plays the three chords in turn. To choose among them:</p>
+<pre class="code"><code>PTDataSection(\section4, (
+    clock:  <span class="s">&quot;150&quot;</span>,
+    number: <span class="s">&quot;50&quot;</span>,
+    rhythm: <span class="s">&quot;Prand([1, -1], inf)&quot;</span>,
+    pitch:  <span class="s">&quot;Prand([[c4, e4, g4], [c4, d4, e4, f4], [d4, g4, b4]], inf)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="pitch-classes-and-octaves">Pitch classes and octaves</h3>
+<p>A pitch class is a pitch without an octave. Pitch and octave can be generated
+separately and combined.</p>
+<pre class="code"><code>PTDataSection(\section8b, (
+    clock:  <span class="s">&quot;200&quot;</span>,
+    number: <span class="s">&quot;50&quot;</span>,
+    rhythm: <span class="s">&quot;1&quot;</span>,
+    pitch:  <span class="s">&quot;(Prand(cmajor, inf) % 12) + (Pwhite(3, 5) * 12) + 12&quot;</span>
+)).make;
+</code></pre>
+<h3 id="per-note">Per note</h3>
+<p>Each value of a list can be transposed by a different amount by adding a pattern
+to it. This may diminish the coherence of the original list, depending on the
+values chosen.</p>
+<pre class="code"><code>PTDataSection(\section10, (
+    clock:  <span class="s">&quot;120&quot;</span>,
+    number: <span class="s">&quot;36&quot;</span>,
+    rhythm: <span class="s">&quot;1&quot;</span>,
+    pitch:  <span class="s">&quot;Pseq([c4, d4, f4], inf) + Pwhite(-12, 12)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="per-group">Per group</h3>
+<p>Another way is to transpose the whole group by one interval, then the whole group
+by the next. The pattern is presented without transposition, then a semitone
+higher, and so on.</p>
+<pre class="code"><code>PTDataSection(\section11, (
+    clock:  <span class="s">&quot;120&quot;</span>,
+    number: <span class="s">&quot;36&quot;</span>,
+    rhythm: <span class="s">&quot;1&quot;</span>,
+    pitch:  <span class="s">&quot;Pseq([c4, d4, f4], inf) + Pstutter(3, Pseries(0, 1, 12))&quot;</span>
+)).make;
+</code></pre>
+<p><code>Pstutter</code> repeats each value of the second pattern as many times as the first
+says, which is what keeps one interval in place for the length of the group.</p>
+<h3 id="summary_5">Summary</h3>
+<dl class="summary"><dt>Patterns</dt><dd>Prand, Pseq, Pwhite, Pstutter, Pseries</dd><dt>Miscellaneous</dt><dd>a nested list is a chord; pattern arithmetic transposes</dd></dl>
+<hr>
+<h2 id="tutorial-7-making-variants-editing-objects"><span class="num">7</span>Making variants, editing objects</h2>
+<p><em>Example file: <code>examples/01-sections-and-stockpiles.scd</code></em></p>
+<p>Toolbox objects are declared by specifying rules. The rules may be trivial or
+evocative. If the rules involve any indeterminacy, applying them another time
+could lead to a different result.</p>
+<p>Each object records the rules by which it was specified and the specific result
+produced by using them. The general and the specific are both maintained. This
+allows objects to be specified in general terms while a particular instance of
+those rules is kept.</p>
+<p>A <strong>variant</strong> of an object is an object of the same type, with the same rules, and
+possibly a different result.</p>
+<pre class="code"><code>PTDataSection(\noise1, (
+    clock:    <span class="s">&quot;150&quot;</span>,
+    number:   <span class="s">&quot;64&quot;</span>,
+    rhythm:   <span class="s">&quot;Pbrown(0.5, 2.0, 0.2)&quot;</span>,
+    pitch:    <span class="s">&quot;Pbrown(c2, c5, 4)&quot;</span>,
+    velocity: <span class="s">&quot;Pbrown(30, 90, 5)&quot;</span>
+)).make;
+
+PT(\noise1).variant;
+</code></pre>
+<p>The variant is called <code>noise1a</code>; the next is <code>noise1b</code>. Both were made using the
+same rules and the results differ. Listening to them shows general similarities
+and specific differences.</p>
+<h3 id="the-five-things-you-can-do-to-an-object">The five things you can do to an object</h3>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>make</code></td>
+<td>apply the rules. Each time gives a new result</td>
+</tr>
+<tr>
+<td><code>reproduce</code></td>
+<td>apply the rules with the stored seed. The same result, exactly</td>
+</tr>
+<tr>
+<td><code>specify</code></td>
+<td>store the rules without applying them</td>
+</tr>
+<tr>
+<td><code>remake</code></td>
+<td>apply them again in place, discarding the old result</td>
+</tr>
+<tr>
+<td><code>variant</code></td>
+<td>the same rules under a new name</td>
+</tr>
+</tbody>
+</table></div>
+<p>Every result records the random seed that produced it, so nothing you liked is
+ever lost. This is the one place where the Toolbox does more than the AC Toolbox
+rather than the same thing differently: a variant there cannot be recovered.</p>
+<ul>
+<li class="action">Make <code>noise1</code> several times, listening each time, then <code>PT(\noise1).reproduce</code>
+  to return to the last one.</li>
+</ul>
+<h3 id="editing-an-object">Editing an object</h3>
+<p><code>PT(\noise1).edit</code> opens a dialog. Every slot is a text field. Changing a slot and
+pressing <code>make</code> remakes the object. Changing the <strong>name</strong> first and then pressing
+<code>make</code> produces a <strong>new</strong> object with the same rules, which is how a family of
+related objects is built up.</p>
+<p>The <code>...</code> button beside a slot opens a larger editor with a parenthesis check,
+which is worth having once expressions grow.</p>
+<h3 id="summary_6">Summary</h3>
+<dl class="summary"><dt>Methods</dt><dd>make, reproduce, specify, remake, variant, edit</dd><dt>Miscellaneous</dt><dd>rules and result are both kept; seeds make results recoverable</dd></dl>
+<hr>
+<h2 id="tutorial-8-transforming-objects"><span class="num">8</span>Transforming objects</h2>
+<p><em>Example file: <code>examples/04-combining-and-transforming.scd</code></em></p>
+<p>A transformer modifies an object or part of one. Transposing pitches, stretching
+tempi, adding random deviation to a parameter are all transformations.</p>
+<p>A transformed section is itself an object. Its rules name a source and a list of
+transformations. The source is not touched. Remake the derived object and the
+transformation runs again; remake the source first and the whole chain follows.</p>
+<pre class="code"><code>PTDerived(\leadUp, (source: <span class="s">&quot;lead&quot;</span>, transform: <span class="s">&quot;PT.transpose(12)&quot;</span>)).make;
+</code></pre>
+<p>Transformations apply from left to right, so their order matters.</p>
+<pre class="code"><code>PTDerived(\clipped, (source: <span class="s">&quot;lead&quot;</span>, transform: <span class="s">&quot;[PT.transpose(24), PT.limit(c3, c6)]&quot;</span>)).make;
+PTDerived(\clipped2, (source: <span class="s">&quot;lead&quot;</span>, transform: <span class="s">&quot;[PT.limit(c3, c6), PT.transpose(24)]&quot;</span>)).make;
+</code></pre>
+<p>The amount may be a constant, a list or a pattern. With a pattern, each note is
+transformed by a different amount.</p>
+<pre class="code"><code>PTDerived(\wander, (source: <span class="s">&quot;lead&quot;</span>, transform: <span class="s">&quot;PT.transpose(Pwhite(-5, 5))&quot;</span>)).make;
+</code></pre>
+<h3 id="the-transformers">The transformers</h3>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>values</th>
+<th><code>PT.add</code> <code>PT.multiply</code> <code>PT.set</code> <code>PT.transpose</code> <code>PT.louder</code> <code>PT.limit</code> <code>PT.fold</code> <code>PT.quantize</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>time</td>
+<td><code>PT.stretch</code></td>
+</tr>
+<tr>
+<td>structure</td>
+<td><code>PT.reverse</code> <code>PT.slice</code> <code>PT.keep</code> <code>PT.drop</code></td>
+</tr>
+<tr>
+<td>conditional</td>
+<td><code>PT.transformIf</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>PT.limit</code> clips values into a range; <code>PT.fold</code> reflects them back, which keeps
+the contour where clipping flattens it against the ceiling.</p>
+<pre class="code"><code>PTDerived(\folded, (source: <span class="s">&quot;lead&quot;</span>, transform: <span class="s">&quot;PT.fold(c4, c5)&quot;</span>)).make;
+PTDerived(\slow, (source: <span class="s">&quot;lead&quot;</span>, transform: <span class="s">&quot;PT.stretch(2)&quot;</span>)).make;
+PTDerived(\back, (source: <span class="s">&quot;lead&quot;</span>, transform: <span class="s">&quot;PT.reverse&quot;</span>)).make;
+PTDerived(\middle, (source: <span class="s">&quot;lead&quot;</span>, transform: <span class="s">&quot;PT.slice(8, 24)&quot;</span>)).make;
+</code></pre>
+<p>Several sources are joined in sequence first, then transformed.</p>
+<pre class="code"><code>PTDerived(\bothUp, (source: <span class="s">&quot;bass lead&quot;</span>, transform: <span class="s">&quot;PT.transpose(7)&quot;</span>)).make;
+</code></pre>
+<p>Velocity and loudness stay in step: a section stores velocity, and amplitude is
+derived from it when the section is played, so <code>PT.louder(30)</code> is audible.</p>
+<h3 id="summary_7">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>derived section</dd><dt>Tools</dt><dd>PT.transpose, PT.limit, PT.fold, PT.quantize, PT.stretch, PT.reverse, PT.slice, PT.keep, PT.drop, PT.add, PT.multiply, PT.set, PT.louder, PT.transformIf</dd></dl>
+<hr>
+<h2 id="tutorial-9-more-opportunities-to-filter"><span class="num">9</span>More opportunities to filter</h2>
+<p><em>Example file: <code>examples/04-combining-and-transforming.scd</code></em></p>
+<p>Filtering removes what is not wanted. There are two ways to do it and they are not
+the same.</p>
+<p><code>PT.filter</code> keeps the events that pass a test and closes the gaps, so the section
+becomes shorter. <code>PT.mute</code> silences them instead, leaving the timing untouched.</p>
+<pre class="code"><code>PTDerived(\highOnly, (source: <span class="s">&quot;lead&quot;</span>, transform: <span class="s">&quot;PT.filter({ |e| e.midinote &gt; 60 })&quot;</span>)).make;
+PTDerived(\highGone, (source: <span class="s">&quot;lead&quot;</span>, transform: <span class="s">&quot;PT.mute({ |e| e.midinote &gt; 60 })&quot;</span>)).make;
+</code></pre>
+<ul>
+<li class="action">Compare <code>PT(\highOnly).duration</code> with <code>PT(\highGone).duration</code>. The second is
+  the same length as <code>lead</code>.</li>
+</ul>
+<p><code>PT.reject</code> is the inverse of <code>PT.filter</code>.</p>
+<h3 id="filtering-repetitions">Filtering repetitions</h3>
+<p><code>PT.dedupe</code> drops the immediate repetition of a value.</p>
+<pre class="code"><code>PTDerived(\noRepeats, (source: <span class="s">&quot;lead&quot;</span>, transform: <span class="s">&quot;PT.dedupe&quot;</span>)).make;
+</code></pre>
+<h3 id="meeting-a-condition">Meeting a condition</h3>
+<p><code>PT.transformIf</code> applies a transformation only to the events that pass a test. The
+others keep their place, so the timing is preserved.</p>
+<pre class="code"><code>PTDerived(\accented, (
+    source:    <span class="s">&quot;lead&quot;</span>,
+    transform: <span class="s">&quot;PT.transformIf({ |e| e.velocity &gt; 90 }, PT.transpose(12))&quot;</span>
+)).make;
+</code></pre>
+<p>A test receives one event and returns true or false. <code>e.midinote</code>, <code>e.velocity</code>,
+<code>e.dur</code> and <code>e.chan</code> are all available.</p>
+<h3 id="filtering-while-generating">Filtering while generating</h3>
+<p>Filtering can also happen before an object is made rather than after. <code>Pwhite</code>
+with a rounding unit avoids values that are not wanted; <code>Pxrand</code> never repeats the
+value it just gave; <code>Pshuf</code> uses everything once before repeating anything.</p>
+<h3 id="summary_8">Summary</h3>
+<dl class="summary"><dt>Tools</dt><dd>PT.filter, PT.reject, PT.mute, PT.dedupe, PT.transformIf</dd><dt>Patterns</dt><dd>Pxrand, Pshuf</dd><dt>Miscellaneous</dt><dd>filtering shortens, muting preserves</dd></dl>
+<hr>
+<h2 id="tutorial-10-filling-time-density-sections"><span class="num">10</span>Filling time: density sections</h2>
+<p><em>Example file: <code>examples/06-note-structures-and-density.scd</code></em></p>
+<p>A <strong>density section</strong> is a section where time and density are primary. The amount
+of time available, the number of events to be placed in it, and a means of
+deciding where those events fall are the essential ingredients.</p>
+<p>A data section says "make this many notes and let the clock work out how long that
+takes". A density section inverts it.</p>
+<p>Time is expressed in seconds. Durations are expressed in milliseconds, since there
+is no clock unit for them to be a multiple of.</p>
+<h3 id="using-attack-points">Using attack points</h3>
+<p>Attack points are given as a percentage of the total time. Zero per cent is the
+beginning, 100 the end. An attack point says where a note begins, not how long it
+lasts.</p>
+<pre class="listing"><code>Name            even
+Time            10
+Attacks         0 10 20 30 40 50 60 70 80 90
+Duration        200
+Pitch           Pwhite(c3, c5)
+</code></pre>
+<pre class="code"><code>PTDensity(\even, (
+    time:     <span class="s">&quot;10&quot;</span>,
+    attacks:  <span class="s">&quot;0 10 20 30 40 50 60 70 80 90&quot;</span>,
+    duration: <span class="s">&quot;200&quot;</span>,
+    pitch:    <span class="s">&quot;Pwhite(c3, c5)&quot;</span>
+)).make;
+</code></pre>
+<p>When a list is used, the number of values in the list decides the number of notes,
+whatever the number slot says. The percentages above produce attacks one second
+apart.</p>
+<p>With a pattern, the number slot decides how many attacks are drawn, and they are
+sorted. The density curve of the section is then the density curve of the pattern.</p>
+<pre class="code"><code>PTDensity(\edges, (
+    time:     <span class="s">&quot;10&quot;</span>,
+    number:   <span class="s">&quot;120&quot;</span>,
+    attacks:  <span class="s">&quot;PTbeta(0.0, 100, 0.2, 0.2)&quot;</span>,
+    duration: <span class="s">&quot;150&quot;</span>,
+    pitch:    <span class="s">&quot;Pwhite(c2, c6)&quot;</span>
+)).make;
+</code></pre>
+<p>Because <code>PTbeta</code> with small parameters produces values near its extremes, the
+attacks crowd both ends of the ten seconds and thin out in the middle.</p>
+<ul>
+<li class="action">Plot it. Vary the two shape parameters and notice the difference.</li>
+</ul>
+<h3 id="producing-intervals">Producing intervals</h3>
+<p>Another approach is to use a function to produce the intervals <strong>between</strong> attack
+points, rather than their absolute positions. This is similar to what Xenakis did
+in his Stochastic Music Program, where a probability function decided the interval
+until the next attack.</p>
+<p><code>PT.attacks</code> returns a list of attack points made by adding one interval after
+another, then mapping the result across the available range.</p>
+<pre class="code"><code>PT.attacks(1, number: 10);
+</code></pre>
+<p>That gives ten evenly spaced values from 0 to 100. With a pattern for the interval
+the spacing varies while the order always ascends.</p>
+<pre class="code"><code>PTDensity(\intervals, (
+    time:     <span class="s">&quot;12&quot;</span>,
+    number:   <span class="s">&quot;80&quot;</span>,
+    attacks:  <span class="s">&quot;PT.attacks(PTbeta(0.0, 0.1, 1, 1))&quot;</span>,
+    duration: <span class="s">&quot;120&quot;</span>,
+    pitch:    <span class="s">&quot;Pwhite(c3, c6)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="using-a-curve">Using a curve</h3>
+<p>In a density curve section the density of notes is determined by mapping a shape
+or a mask between a minimum and a maximum number of notes per time unit. By
+default the time unit is one second.</p>
+<pre class="code"><code>PTShape(\swell, (source: <span class="s">&quot;1 4 20 8 2 14 30 6 1&quot;</span>)).make;
+
+PTDensityCurve(\swelling, (
+    time:     <span class="s">&quot;14&quot;</span>,
+    curve:    <span class="s">&quot;swell&quot;</span>,
+    min:      <span class="s">&quot;1&quot;</span>,
+    max:      <span class="s">&quot;24&quot;</span>,
+    unit:     <span class="s">&quot;1&quot;</span>,
+    duration: <span class="s">&quot;120&quot;</span>,
+    pitch:    <span class="s">&quot;Pwhite(c3, c6)&quot;</span>
+)).make;
+</code></pre>
+<ul>
+<li class="action">Plot it. The section is thick where the shape is high.</li>
+</ul>
+<p>If a mask is given instead of a shape, the count at each step is chosen between
+its two lines, so the density itself becomes a tendency rather than a fixed
+contour.</p>
+<pre class="code"><code>PTMask(\loose, (top: <span class="s">&quot;30 24 18 12&quot;</span>, bottom: <span class="s">&quot;2 6 10 14&quot;</span>)).make;
+
+PTDensityCurve(\loosening, (
+    time:     <span class="s">&quot;12&quot;</span>,
+    curve:    <span class="s">&quot;loose&quot;</span>,
+    min:      <span class="s">&quot;1&quot;</span>,
+    max:      <span class="s">&quot;30&quot;</span>,
+    unit:     <span class="s">&quot;1&quot;</span>,
+    duration: <span class="s">&quot;150&quot;</span>,
+    pitch:    <span class="s">&quot;Pwhite(c2, c5)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="summary_9">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>density section, density curve section</dd><dt>Patterns</dt><dd>PTbeta</dd><dt>Tools</dt><dd>PT.attacks</dd><dt>Miscellaneous</dt><dd>time in seconds, durations in milliseconds; a list of attacks sets the number itself</dd></dl>
+<hr>
+<h2 id="tutorial-11-note-structures"><span class="num">11</span>Note structures</h2>
+<p><em>Example file: <code>examples/06-note-structures-and-density.scd</code></em></p>
+<p>A data section calculates rhythm, pitch and velocity apart from each other. That
+is excellent for making material and useless for writing down music you already
+know.</p>
+<p>A <strong>note structure</strong> treats a note as one indivisible thing. Note structures allow
+the specification of a known group of pitches, chords and rests, and they can be
+combined in sequence and in parallel.</p>
+<p>Rhythm inside a structure is in clock units. A section supplies the clock, so one
+structure can be played at several tempi.</p>
+<h3 id="writing-a-melody">Writing a melody</h3>
+<p>Rhythm comes first, then pitch. <code>r</code> is a rest, <code>.</code> is a delay, and a plus sign
+makes a chord.</p>
+<pre class="code"><code>PTNoteStructure(\theme, (
+    source: <span class="s">&quot;PT.melody(\&quot;2 c4 1 d4 1 e4 2 g4 1 f4 1 e4 2 d4 1 r 2 c4\&quot;)&quot;</span>
+)).make;
+</code></pre>
+<ul>
+<li class="action">Look at it with <code>PT(\theme).postValues</code>.</li>
+<li class="action"><code>PT(\theme).size</code> is how many notes; <code>PT(\theme).beats</code> is how long in clock
+  units.</li>
+</ul>
+<h3 id="building-a-structure">Building a structure</h3>
+<p>For anything more involved, build the tree.</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PT.note(rhythm, pitch)</code></td>
+<td>a note</td>
+</tr>
+<tr>
+<td><code>PT.rest(rhythm)</code></td>
+<td>a rest: silence that is kept as an event</td>
+</tr>
+<tr>
+<td><code>PT.delay(rhythm)</code></td>
+<td>time with nothing in it at all</td>
+</tr>
+<tr>
+<td><code>PT.seq(...)</code></td>
+<td>one after another</td>
+</tr>
+<tr>
+<td><code>PT.par(...)</code></td>
+<td>at the same time</td>
+</tr>
+</tbody>
+</table></div>
+<p>The AC Toolbox spellings <code>PT.aNote</code>, <code>PT.aRest</code>, <code>PT.aDelay</code>, <code>PT.inSequence</code> and
+<code>PT.inParallel</code> do the same.</p>
+<pre class="code"><code>PTNoteStructure(\chords, (source: <span class="s">&quot;PT.seq(
+    PT.par(PT.note(4, c3), PT.seq(PT.note(2, e4), PT.note(2, g4))),
+    PT.par(PT.note(4, f3), PT.seq(PT.note(1, a4), PT.note(1, g4), PT.note(2, f4)))
+)&quot;</span>)).make;
+</code></pre>
+<p>A low note is held while notes move above it. In sequence, durations add up; in
+parallel, the group lasts as long as its longest member.</p>
+<h3 id="summary_10">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>note structure</dd><dt>Methods</dt><dd>postValues, size, beats</dd><dt>Tools</dt><dd>PT.melody, PT.note, PT.rest, PT.delay, PT.seq, PT.par</dd></dl>
+<hr>
+<h2 id="tutorial-12-making-note-sections"><span class="num">12</span>Making note sections</h2>
+<p><em>Example file: <code>examples/06-note-structures-and-density.scd</code></em></p>
+<p>In a <strong>note section</strong>, rhythm, pitch, velocity and channel are dealt with together
+by using notes rather than separately.</p>
+<h3 id="with-note-structures">With note structures</h3>
+<p>Given a structure, the section plays it as written, parallelism and all. An empty
+number slot means all of it.</p>
+<pre class="code"><code>PTNoteSection(\played, (clock: <span class="s">&quot;300&quot;</span>, notes: <span class="s">&quot;theme&quot;</span>)).make;
+</code></pre>
+<h3 id="with-patterns">With patterns</h3>
+<p>Given anything else that supplies notes, the structure is flattened and becomes
+material to choose from. This is how a known melody is turned into raw material.</p>
+<pre class="code"><code>PTNoteSection(\scattered, (clock: <span class="s">&quot;200&quot;</span>, number: <span class="s">&quot;60&quot;</span>, notes: <span class="s">&quot;Prand(theme, inf)&quot;</span>)).make;
+PTNoteSection(\permuted, (clock: <span class="s">&quot;200&quot;</span>, number: <span class="s">&quot;60&quot;</span>, notes: <span class="s">&quot;Pxrand(theme, inf)&quot;</span>)).make;
+</code></pre>
+<p>When a structure is used as material it is flattened: no notes are in parallel,
+all are in sequence.</p>
+<h3 id="with-shapes">With shapes</h3>
+<p>The order in which notes are chosen can follow a curve.</p>
+<pre class="code"><code>PTNoteSection(\shaped, (
+    clock:  <span class="s">&quot;200&quot;</span>,
+    number: <span class="s">&quot;80&quot;</span>,
+    notes:  <span class="s">&quot;PT.readFrom(theme, arch, PT.fromNumber)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="interpolating-between-two-structures">Interpolating between two structures</h3>
+<p><code>PT.interpolate</code> performs a gradual change from one object to another. During each
+step of the interpolation either an element of the first or an element of the
+second is returned, and the probability that the second is chosen increases as the
+interpolation proceeds. The idea is Rainer Boesch's.</p>
+<pre class="code"><code>PTNoteStructure(\other, (source: <span class="s">&quot;PT.melody(\&quot;1 c5 1 b4 1 gs4 1 fs4 1 e4\&quot;)&quot;</span>)).make;
+
+PTNoteSection(\morphing, (
+    clock:  <span class="s">&quot;180&quot;</span>,
+    number: <span class="s">&quot;160&quot;</span>,
+    notes:  <span class="s">&quot;PT.interpolate(theme, other, 160)&quot;</span>
+)).make;
+</code></pre>
+<p>Instead of a straight line, any shape may be given for the interpolation.</p>
+<pre class="code"><code>PTNoteSection(\morphing2, (
+    clock:  <span class="s">&quot;180&quot;</span>,
+    number: <span class="s">&quot;160&quot;</span>,
+    notes:  <span class="s">&quot;PT.interpolate(theme, other, 160, arch)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="using-a-section-as-material">Using a section as material</h3>
+<p>A section can supply notes too. Its rhythms arrive in seconds, so a clock of 1000
+reproduces the original timing. This is useful when a section has been captured or
+imported and the intention is to rearrange what is in it.</p>
+<pre class="code"><code>PTNoteSection(\reordered, (
+    clock:  <span class="s">&quot;1000&quot;</span>,
+    number: <span class="s">&quot;40&quot;</span>,
+    notes:  <span class="s">&quot;Pxrand(PT.asList(lead), inf)&quot;</span>
+)).make;
+</code></pre>
+<h3 id="summary_11">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>note section</dd><dt>Tools</dt><dd>PT.readFrom, PT.interpolate, PT.asList, PT.fromNumber</dd><dt>Patterns</dt><dd>Prand, Pxrand</dd></dl>
+<hr>
+<h2 id="tutorial-13-a-level-higher-controllers-and-schemes"><span class="num">13</span>A level higher: controllers and schemes</h2>
+<p><em>Example file: <code>examples/05-controllers-and-schemes.scd</code></em></p>
+<p>Patterns used in the rules of a section have no history outside that section. Each
+time the section is made, a new pattern is built that knows nothing about what
+happened previously. No relationship between one section and the next can be
+expressed with them.</p>
+<p>A <strong>controller</strong> is an object that retains its state outside any section
+specification. It remembers what it has done and knows what it should do next. It
+is useful for expressing relationships at a level higher than one parameter of one
+section.</p>
+<h3 id="using-controllers">Using controllers</h3>
+<pre class="code"><code>PTController(\howMany, (source: <span class="s">&quot;2 10 20&quot;</span>)).make;
+
+PTDataSection(\bit, (clock: <span class="s">&quot;150&quot;</span>, number: <span class="s">&quot;howMany&quot;</span>, pitch: <span class="s">&quot;Pwhite(c3, c5)&quot;</span>)).specify;
+</code></pre>
+<ul>
+<li class="action">Make <code>bit</code> three times. It has two notes, then ten, then twenty.</li>
+</ul>
+<p><code>PT(\howMany).history</code> is everything the controller has handed out.
+<code>PT(\howMany).reset</code> starts it again. A given seed replays a given history exactly.</p>
+<p>Note that <code>bit</code> was <strong>specified</strong>, not made. When an object is specified its rules
+are stored but not applied, so the controller is not yet consulted.</p>
+<h3 id="take-one">Take one</h3>
+<p>Used bare in a slot, a controller supplies a value every time that slot is
+calculated: once per note. <code>PT.takeOne</code> pulls a single value and hands that one
+value on, so it holds for the whole section.</p>
+<pre class="code"><code>PTController(\low, (source: <span class="s">&quot;48 50 52 54 56&quot;</span>)).make;
+PTController(\high, (source: <span class="s">&quot;72 74 76 78 80&quot;</span>)).make;
+
+PTDataSection(\band, (
+    clock:  <span class="s">&quot;120&quot;</span>,
+    number: <span class="s">&quot;30&quot;</span>,
+    pitch:  <span class="s">&quot;PTbeta(PT.takeOne(low), PT.takeOne(high), 0.3, 0.3)&quot;</span>
+)).specify;
+</code></pre>
+<ul>
+<li class="action">Make <code>band</code> several times. Each one sits inside a different band, and the
+  bands walk outwards.</li>
+</ul>
+<h3 id="change-on-a-level-above-the-section">Change on a level above the section</h3>
+<p>This is what controllers are for. Five variants of one section, each tending to be
+faster and louder than the one before. No pattern inside the section can do this,
+because the trend lives between the sections rather than within them.</p>
+<pre class="code"><code>PTController(\rhythmCeiling, (source: <span class="s">&quot;Pseries(3.0, -0.375, 5)&quot;</span>)).make;
+PTController(\velocityFloor, (source: <span class="s">&quot;Pseries(40, 7.5, 5)&quot;</span>)).make;
+
+PTDataSection(\gesture, (
+    clock:    <span class="s">&quot;100&quot;</span>,
+    number:   <span class="s">&quot;24&quot;</span>,
+    rhythm:   <span class="s">&quot;PTbeta(1.0, PT.takeOne(rhythmCeiling), 0.2, 0.2)&quot;</span>,
+    pitch:    <span class="s">&quot;Pbrown(c2, c6, 6)&quot;</span>,
+    velocity: <span class="s">&quot;PTbeta(PT.takeOne(velocityFloor), 90, 0.2, 0.2)&quot;</span>
+)).specify;
+
+PTCommunity(\gestures, (source: <span class="s">&quot;gesture&quot;</span>, number: <span class="s">&quot;5&quot;</span>)).make;
+</code></pre>
+<ul>
+<li class="action">Compare the variants:
+  <code>PT(\gestures).sections.collect { |s| s.extract(\rhythm).mean }</code>.</li>
+</ul>
+<h3 id="using-the-same-value">Using the same value</h3>
+<p>Sometimes two parameters must be derived from the <strong>same</strong> value. If a controller
+were used in both, it would be applied twice and give two different values.</p>
+<p>The solution is to synchronise two controllers to a third. Whichever asks first
+makes the third produce a value; the other sees that same value rather than a new
+one.</p>
+<pre class="code"><code>PTController(\choose, (source: <span class="s">&quot;Prand([1, 2, 3, 10], inf)&quot;</span>)).make;
+PTController(\forRhythm, (syncTo: <span class="s">&quot;choose&quot;</span>)).make;
+PTController(\forVelocity, (syncTo: <span class="s">&quot;choose&quot;</span>)).make;
+
+PTStockpile(\table, (source: <span class="s">&quot;1 40 2 55 3 70 10 110&quot;</span>)).make;
+
+PTDataSection(\linked, (
+    clock:    <span class="s">&quot;120&quot;</span>,
+    number:   <span class="s">&quot;40&quot;</span>,
+    rhythm:   <span class="s">&quot;forRhythm&quot;</span>,
+    pitch:    <span class="s">&quot;Pwhite(c3, c5)&quot;</span>,
+    velocity: <span class="s">&quot;PT.lookup(forVelocity, table)&quot;</span>
+)).make;
+</code></pre>
+<p><code>PT.lookup</code> maps values through a table given as pairs. Short notes are quiet and
+long ones are loud, note for note.</p>
+<h3 id="schemes">Schemes</h3>
+<p>A <strong>scheme</strong> contains the names of objects that are to be remade in a certain
+order. When the scheme is applied, those objects are made in that order. If an
+object is made as part of a scheme, its previous result is lost.</p>
+<p>The two reasons to use a scheme are convenience and design. The convenience is
+that a section reading a generated shape needs the shape remade first, and doing
+that by hand becomes tedious. The design is that the order of remaking is itself a
+decision.</p>
+<pre class="code"><code>PTShape(\curve, (source: <span class="s">&quot;Pbrown(0, 100, 20)&quot;</span>, number: <span class="s">&quot;16&quot;</span>)).make;
+
+PTDataSection(\theme2, (
+    clock:    <span class="s">&quot;110&quot;</span>,
+    number:   <span class="s">&quot;48&quot;</span>,
+    pitch:    <span class="s">&quot;curve.convert(PT.fromNumber, c3, c5)&quot;</span>,
+    velocity: <span class="s">&quot;curve.convert(PT.fromNumber, 40, 110)&quot;</span>
+)).make;
+
+PTScheme(\round, (members: <span class="s">&quot;curve theme2&quot;</span>)).make;
+PT(\round).apply;
+</code></pre>
+<p>Without a reset, a controller carries on from where it was, which is usually what
+is wanted. Name the controllers in the <code>reset</code> slot when a pass should start over.</p>
+<pre class="code"><code>PTScheme(\fromTheTop, (
+    members: <span class="s">&quot;gestures&quot;</span>,
+    reset:   <span class="s">&quot;rhythmCeiling velocityFloor&quot;</span>
+)).make;
+
+PT(\fromTheTop).apply;
+PT(\fromTheTop).applyTimes(3);
+</code></pre>
+<h3 id="summary_12">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>controller, scheme</dd><dt>Methods</dt><dd>history, reset, apply, applyTimes, specify</dd><dt>Tools</dt><dd>PT.takeOne, PT.lookup</dd><dt>Miscellaneous</dt><dd>synchronised controllers relate two parameters exactly</dd></dl>
+<hr>
+<h2 id="tutorial-14-communities"><span class="num">14</span>Communities</h2>
+<p><em>Example file: <code>examples/04-combining-and-transforming.scd</code></em></p>
+<p>A <strong>community</strong> is a group of sections joined in name only. It holds names, not
+music. Its use is that it gives a handle on a group.</p>
+<p>A community can list its members, or generate them as variants of one section.</p>
+<pre class="code"><code>PTCommunity(\voices, (members: <span class="s">&quot;bass lead&quot;</span>)).make;
+PTCommunity(\family, (source: <span class="s">&quot;lead&quot;</span>, number: <span class="s">&quot;5&quot;</span>)).make;
+</code></pre>
+<p>The second makes <code>lead1</code> to <code>lead5</code>, all sharing the rules of <code>lead</code> and each with
+its own seed. Remaking the community regenerates them under the same names rather
+than piling up new ones.</p>
+<p>A community can be folded into something that can be heard.</p>
+<pre class="code"><code>PT(\family).asSequence(\familyChain, 0.5);
+PT(\family).asParallel(\familyCloud, 0.25);
+</code></pre>
+<ul>
+<li class="action">Make the family again and fold it again. The chain is new material on the same
+  rules.</li>
+</ul>
+<h3 id="summary_13">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>community</dd><dt>Methods</dt><dd>names, sections, makeAll, asSequence, asParallel, postValues</dd></dl>
+<hr>
+<h2 id="tutorial-15-playing-live"><span class="num">15</span>Playing live</h2>
+<p><em>Example file: <code>examples/07-live-and-export.scd</code></em></p>
+<p>Every object so far keeps rules and one result of applying them. A <strong>bind</strong> keeps
+only the rules. It has no events at all, and it does not end.</p>
+<p>A bind plays through a <code>Pdef</code> named after itself, so an edit takes effect on the
+next cycle rather than restarting.</p>
+<pre class="code"><code>PTBind(\live, (
+    clock:    <span class="s">&quot;150&quot;</span>,
+    rhythm:   <span class="s">&quot;Prand([1, 1, 2, -1], inf)&quot;</span>,
+    pitch:    <span class="s">&quot;Prand(cmajor, inf)&quot;</span>,
+    velocity: <span class="s">&quot;Pwhite(50, 110)&quot;</span>
+)).make;
+</code></pre>
+<ul>
+<li class="action">Play it, then change a slot and make it again while it sounds.</li>
+</ul>
+<pre class="code"><code>PT(\live).spec.put(\pitch, <span class="s">&quot;Prand(cmajor, inf) + Prand([0, 12], inf)&quot;</span>);
+PT(\live).make;
+</code></pre>
+<p>Anything else a <code>Pbind</code> accepts goes in the <code>extra</code> slot, as an Event:
+<code>(pan: Pwhite(-0.8, 0.8), legato: 0.4)</code>.</p>
+<h3 id="keeping-a-take">Keeping a take</h3>
+<p>A bind cannot be plotted or transformed, because there is nothing there yet.
+Capture it and an ordinary section results.</p>
+<pre class="code"><code>PT(\live).capture(\take1, 64);
+</code></pre>
+<p>A capture keeps its own rules, so remaking it takes a new stretch of the same live
+material, while <code>reproduce</code> brings back the take that was wanted. From there it is
+a section like any other: plot it, transform it, combine it, save it.</p>
+<h3 id="summary_14">Summary</h3>
+<dl class="summary"><dt>Objects</dt><dd>bind, capture</dd><dt>Methods</dt><dd>play, stop, make, capture, reproduce</dd><dt>Miscellaneous</dt><dd>a bind has rules and no result</dd></dl>
+<hr>
+<h2 id="tutorial-16-getting-out"><span class="num">16</span>Getting out</h2>
+<p><em>Example file: <code>examples/07-live-and-export.scd</code></em></p>
+<h3 id="as-code">As code</h3>
+<p>An object can say what it is in plain SuperCollider. Pitch names become numbers
+and a referenced stockpile is written out as its values, so the result stands on
+its own with the Toolbox uninstalled.</p>
+<pre class="code"><code>PT(\section1).asPbindSource;
+PT(\section1).asSource;
+</code></pre>
+<p>The first gives the rules as a <code>Pbind</code>, the second gives the events themselves,
+exactly. This is worth knowing when the object list has been doing the thinking
+and you want to see what an object actually is.</p>
+<h3 id="as-a-midi-file">As a Midi file</h3>
+<pre class="code"><code>PT(\section1).writeMidi(<span class="s">&quot;~/Desktop/sketch.mid&quot;</span>);
+</code></pre>
+<p>A format 0 file with one tick to the millisecond. Chords are written as
+simultaneous note ons, rests leave their time empty, and channel and velocity are
+carried through.</p>
+<h3 id="as-a-sound-file">As a sound file</h3>
+<pre class="code"><code>PT(\section1).render(<span class="s">&quot;~/Desktop/sketch.wav&quot;</span>);
+</code></pre>
+<p>Rendered offline, faster than real time. The SynthDefs travel with the score,
+since an offline server has none of its own.</p>
+<p><code>PT(\section1).asScore</code> gives the score itself, if something is to be added to it
+before rendering.</p>
+<h3 id="to-a-midi-device">To a Midi device</h3>
+<pre class="code"><code>PT.midiOut_(MIDIOut(0));
+PT(\section1).playMidi;
+</code></pre>
+<h3 id="summary_15">Summary</h3>
+<dl class="summary"><dt>Methods</dt><dd>asSource, asPbindSource, writeMidi, render, asScore, playMidi</dd></dl>
+<hr>
+<h2 id="index-of-objects">Index of objects</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>object</th>
+<th>slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PTDataSection</code></td>
+<td>clock, number, rhythm, pitch, velocity, channel, instrument</td>
+</tr>
+<tr>
+<td><code>PTNoteSection</code></td>
+<td>clock, number, notes, instrument</td>
+</tr>
+<tr>
+<td><code>PTDensity</code></td>
+<td>time, number, attacks, duration, pitch, velocity, channel, instrument</td>
+</tr>
+<tr>
+<td><code>PTDensityCurve</code></td>
+<td>time, curve, min, max, unit, duration, pitch, velocity, channel, instrument</td>
+</tr>
+<tr>
+<td><code>PTSequence</code></td>
+<td>sections</td>
+</tr>
+<tr>
+<td><code>PTParallel</code></td>
+<td>sections</td>
+</tr>
+<tr>
+<td><code>PTTimed</code></td>
+<td>sections, times</td>
+</tr>
+<tr>
+<td><code>PTDerived</code></td>
+<td>source, transform</td>
+</tr>
+<tr>
+<td><code>PTCapture</code></td>
+<td>source, number</td>
+</tr>
+<tr>
+<td><code>PTBind</code></td>
+<td>clock, rhythm, pitch, velocity, channel, instrument, extra</td>
+</tr>
+<tr>
+<td><code>PTStockpile</code></td>
+<td>source, number</td>
+</tr>
+<tr>
+<td><code>PTShape</code></td>
+<td>source, number</td>
+</tr>
+<tr>
+<td><code>PTMask</code></td>
+<td>top, bottom, number</td>
+</tr>
+<tr>
+<td><code>PTNoteStructure</code></td>
+<td>source</td>
+</tr>
+<tr>
+<td><code>PTCommunity</code></td>
+<td>members, source, number</td>
+</tr>
+<tr>
+<td><code>PTController</code></td>
+<td>source, syncTo</td>
+</tr>
+<tr>
+<td><code>PTScheme</code></td>
+<td>members, reset</td>
+</tr>
+</tbody>
+</table></div>
+<p>Common to every object: <code>make</code>, <code>reproduce</code>, <code>specify</code>, <code>remake</code>, <code>variant</code>,
+<code>edit</code>, <code>plot</code>, <code>postSpec</code>, <code>postInfo</code>, <code>comment_</code>.</p>
+<p>Common to every section: <code>play</code>, <code>stop</code>, <code>notes</code>, <code>numNotes</code>, <code>duration</code>,
+<code>extract</code>, <code>textScore</code>, <code>asSource</code>, <code>asPbindSource</code>, <code>writeMidi</code>, <code>render</code>,
+<code>asScore</code>.</p>
+<hr>
+<h2 id="index-of-tools">Index of tools</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>tool</th>
+<th>what it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PT.browse</code></td>
+<td>open the object list</td>
+</tr>
+<tr>
+<td><code>PT.save</code>, <code>PT.load</code></td>
+<td>write or read an environment</td>
+</tr>
+<tr>
+<td><code>PT.post</code></td>
+<td>list every object with its type, length and seed</td>
+</tr>
+<tr>
+<td><code>PT.stopAll</code></td>
+<td>stop everything sounding</td>
+</tr>
+<tr>
+<td><code>PT.bpm</code>, <code>PT.mm</code></td>
+<td>beats per minute, or a metronome mark, as a clock unit</td>
+</tr>
+<tr>
+<td><code>PT.untilTime</code></td>
+<td>in a number slot: fill this many seconds</td>
+</tr>
+<tr>
+<td><code>PT.fromNumber</code></td>
+<td>how many notes the section is making</td>
+</tr>
+<tr>
+<td><code>PT.midinote</code>, <code>PT.dyn</code></td>
+<td>a pitch name or a dynamic, as a number</td>
+</tr>
+<tr>
+<td><code>PT.convert</code></td>
+<td>interpret a shape or a mask in a range</td>
+</tr>
+<tr>
+<td><code>PT.readFrom</code></td>
+<td>read a collection in the order a curve describes</td>
+</tr>
+<tr>
+<td><code>PT.attacks</code></td>
+<td>attack points from intervals</td>
+</tr>
+<tr>
+<td><code>PT.interpolate</code></td>
+<td>gradually turn one object into another</td>
+</tr>
+<tr>
+<td><code>PT.lookup</code></td>
+<td>map values through a table of pairs</td>
+</tr>
+<tr>
+<td><code>PT.takeOne</code></td>
+<td>one value from a controller, for the whole section</td>
+</tr>
+<tr>
+<td><code>PT.melody</code></td>
+<td>a melody written as rhythm and pitch</td>
+</tr>
+<tr>
+<td><code>PT.note</code>, <code>PT.rest</code>, <code>PT.delay</code>, <code>PT.seq</code>, <code>PT.par</code></td>
+<td>build a note structure</td>
+</tr>
+<tr>
+<td><code>PT.asList</code></td>
+<td>notes out of a structure or a section</td>
+</tr>
+</tbody>
+</table></div>
+<p>Transformers: <code>PT.transpose</code>, <code>PT.louder</code>, <code>PT.add</code>, <code>PT.multiply</code>, <code>PT.set</code>,
+<code>PT.limit</code>, <code>PT.fold</code>, <code>PT.quantize</code>, <code>PT.stretch</code>, <code>PT.filter</code>, <code>PT.reject</code>,
+<code>PT.mute</code>, <code>PT.dedupe</code>, <code>PT.reverse</code>, <code>PT.slice</code>, <code>PT.keep</code>, <code>PT.drop</code>,
+<code>PT.transformIf</code>.</p>
+<p>Patterns added by the Toolbox: <code>PTbeta</code>.</p>
+<hr>
+<p><em>The Pattern Toolbox is an independent reimplementation of the ideas of Paul
+Berg's AC Toolbox, and carries no AC Toolbox code. The AC Toolbox is at
+<a href="https://www.actoolbox.net">actoolbox.net</a>.</em></p>
+</article>
