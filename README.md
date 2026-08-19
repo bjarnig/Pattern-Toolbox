@@ -1,11 +1,17 @@
 # Pattern Toolbox
 
-Named, browsable, reproducible musical objects for SuperCollider.
+An homage to Paul Berg's **AC Toolbox**, rebuilt on SuperCollider patterns.
 
-A composition environment in the spirit of Paul Berg's **AC Toolbox**. You make an
-object, it gets a name, and you can look at it, hear it, edit its rules, remake it,
-make a variant of it, and refer to it from any other object. An object keeps both
-its rules and one specific result of applying them.
+Paul Berg taught at the Institute of Sonology and wrote the AC Toolbox, a Lisp
+environment for computer-aided algorithmic composition, drawing in part on the
+selection principles G. M. Koenig used in PR2 and SSP. Its central idea is that a
+musical object holds both the rules that made it and one specific result of
+applying them, so material can be described in general terms while a particular
+instance of it is kept. This is that idea in SuperCollider, written for the
+classes he used to teach.
+
+You make an object, it gets a name, and you can look at it, hear it, edit its
+rules, remake it, make a variant of it, and refer to it from any other object.
 
 ![an object and its rules](doc/images/object-dialog.png)
 
@@ -46,15 +52,11 @@ pitch name, a list, any SuperCollider pattern, or the name of another object.
 
 ## Documentation
 
-`doc/TUTORIAL.md` is the tutorial, in sixteen short chapters. The same thing as a
-single page is at `doc/tutorial.html`.
+`doc/TUTORIAL.md` is the tutorial, in sixteen short chapters, following the shape
+of Berg's own. The same thing as a single page is at `doc/tutorial.html`. Worked
+examples for each chapter are in `examples/`.
 
-Worked examples for each chapter are in `examples/`.
+---
 
-## Credit
-
-The AC Toolbox is by Paul Berg, at [actoolbox.net](https://www.actoolbox.net).
-This is an independent reimplementation of its ideas in SuperCollider, and carries
-no AC Toolbox code.
-
-GPL-3.0. See `LICENSE`.
+The AC Toolbox is at [actoolbox.net](https://www.actoolbox.net). This carries no
+AC Toolbox code. GPL-3.0, as SuperCollider is.
