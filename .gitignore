@@ -1,3 +1,6 @@
 .DS_Store
 *.ptx
 !examples/*.ptx
+
+# local notes, not part of the quark
+CLAUDE.md
