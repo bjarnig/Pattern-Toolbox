@@ -72,14 +72,17 @@ text has not introduced yet.
 
 ## Where it stands
 
-Phases 0 to 6 are done: object model, stockpiles, data sections, note structures and
-note sections, density sections, shapes and masks with drawing editors, combinations,
-transformers and filters, communities, controllers and schemes, a live `Pdef`-backed
-layer with capture, MIDI file and offline render export, source export, the archive
-format, the browser and dialogs, the piano roll.
+**Released at 1.0.** Everything in the class tree in `ARCHITECTURE.md` marked done
+is in: the object model, all seventeen object types, the browser and dialogs, the
+drawing editors, the piano roll, the live layer, the archive format, and export to
+MIDI file, sound file and source.
 
-Phase 7 is the extended generator library: Koenig's selection principles, chaos,
-1/f, transition tables, mutations. Also outstanding: MIDI **input** (deferred because
-there is no device here to verify it against — MIDI output is written but likewise
-unverified against hardware, and marked as such in the source), and XY density
-sections, which need the chaos generators first.
+Left for after 1.0, all of it vocabulary rather than structure: the extended
+generator library (Koenig's selection principles, chaos, 1/f, transition tables,
+mutations), MIDI **input** (deferred because there is no device here to verify it
+against — MIDI output is written but likewise unverified against hardware, and
+marked as such in the source), XY density sections, and the rest of the `.schelp`
+reference.
+
+The phase numbers in `ARCHITECTURE.md` are a record of the build order. Do not
+reintroduce them as a status: the README states a version.

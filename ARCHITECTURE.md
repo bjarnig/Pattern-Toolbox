@@ -403,9 +403,12 @@ typing a new name into a dialog's name field and pressing Make creates a **new**
 object with the same rules and the dialog follows it. That is how the AC Toolbox
 tutorial asks you to make section2 out of section1.
 
-## 11. Build order
+## 11. How it was built
 
-| Phase | Content | Gate | Status |
+Version 1.0 is phases 0 to 6. The phases were a build order, not a maturity
+scale, and are kept here as a record of what was proved when.
+
+| Phase | Content | Gate | |
 | --- | --- | --- | --- |
 | 0 | `PT`, `PTObject`, `PTSpec`, `PTStockpile`, `PTDataSection`, archive | Tutorials 1 and 2 reproducible from the interpreter, under test | **done** |
 | 1 | `PTBrowser`, generic object view, Make / Variant / Play / Plot, piano roll | Tutorials 1 and 2 reproducible by clicking | **done** |
@@ -414,7 +417,7 @@ tutorial asks you to make section2 out of section1.
 | 4 | `PTController`, `PTScheme` | Tutorial 13, the level higher | **done** |
 | 5 | `PTNoteStructure`, note and density sections | Tutorials 8, 9, 10 | **done** |
 | 6 | `PTBind`, `PTCapture`, MIDI file and NRT export, source export, MIDI out | new ground | **done** |
-| 7 | Generator library: Koenig selection principles, chaos, 1/f, transition tables, mutations; MIDI input; XY density sections | Tutorial 24 and the Annotated Index | next |
+| after 1.0 | Generator library: Koenig selection principles, chaos, 1/f, transition tables, mutations; MIDI input; XY density sections | Tutorial 24 and the Annotated Index | |
 
 ## 12. Open questions
 

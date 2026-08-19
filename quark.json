@@ -2,7 +2,7 @@
 	name: "Pattern-Toolbox",
 	summary: "A named-object toolbox for computer-aided algorithmic composition, built over SuperCollider patterns",
 	url: "https://github.com/bjarnig/Pattern-Toolbox",
-	version: "0.1.0",
+	version: "1.0.0",
 	schelp: "HelpSource",
 	since: "3.13",
 	copyright: "Bjarni Gunnarsson",

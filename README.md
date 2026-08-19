@@ -7,12 +7,14 @@ over SuperCollider patterns. You make an object, it gets a name, you can look at
 it, hear it, edit its rules, remake it, make a variant of it, and refer to it
 from any other object. The rules and one specific result are both kept.
 
-Status: **phase 6**. The object model, stockpiles, data sections, note structures,
-note sections, density sections, shapes, masks, combinations, transformers,
-filters, communities, controllers, schemes, a live `Pdef`-backed layer, MIDI file
-and offline render export, source export, the archive format, the browser, the
-object dialogs, the drawing editor and the piano roll all work and are covered by
-tests. The extended generator library is next.
+**Version 1.0.** Seventeen object types, a browser and dialogs, drawing editors
+for shapes and masks, a piano roll, a live layer, and export to MIDI files, sound
+files and plain SuperCollider source. 300 assertions, and every code block in the
+tutorial has been run.
+
+Not in 1.0: the extended generator library (Koenig's selection principles, chaos,
+transition tables, mutations), MIDI input, and XY density sections. `PT.midiOut`
+exists but has not been tested against hardware. See [Roadmap](#roadmap).
 
 ![the browser and an object dialog](doc/images/object-dialog.png)
 
@@ -406,6 +408,19 @@ HTML.
 
 `ARCHITECTURE.md` explains the design, what was taken from the AC Toolbox, what
 was changed and why, and the phase plan.
+
+## Roadmap
+
+1.0 is the toolbox itself: objects, the interface, and the ways in and out.
+What is deliberately left for later is vocabulary rather than structure, and none
+of it changes the object model.
+
+| | |
+| --- | --- |
+| Generator library | Koenig's selection principles from Project 2 and SSP, chaotic maps, 1/f noise, transition tables, morphological mutations. Each is a `Pattern` subclass; `PTbeta` is the pattern the others will follow. |
+| MIDI input | External controllers driving object parameters, as in AC Toolbox Tutorial 12. Deferred because it cannot be verified without a device, and shipping untested hardware code as working is worse than shipping none. |
+| XY density sections | Attack times and pitches read off a chaotic map. Needs the chaos generators first. |
+| Help files | One `.schelp` so far. The class comments carry the reference for now, and the tutorial carries the teaching. |
 
 ## Credit
 
